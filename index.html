@@ -74,7 +74,7 @@
             display: block; background: #1a1a2e;
         }
 
-        /* АТМОСФЕРНЫЕ ГЛЮКИ - ТОЛЬКО ДРОЖАНИЕ ТЕКСТА И СДВИГИ */
+        /* АТМОСФЕРНЫЕ ГЛЮКИ */
         .glitch-text {
             animation: textGlitch 0.15s infinite;
         }
@@ -314,7 +314,6 @@
     let bossDefeated = false;
     let room9Password = '';
     let level4MessageShown = false;
-    let crashTimer = null;
     let glitchInterval = null;
 
     let player = { x: 400, y: 300, size: 14, speed: 4 };
@@ -329,7 +328,7 @@
     let noteObj = null;
     let exitDoor = null;
     let bloodSplatters = [];
-    let phantomObjects = []; // фантомные объекты для глюков
+    let phantomObjects = [];
 
     let cmdExpectingPassword = false;
     let cmdPasswordTarget = '';
@@ -394,9 +393,14 @@
         bloodSplatters = [];
         phantomObjects = [];
         
-        if (crashTimer) {
-            clearTimeout(crashTimer);
-            crashTimer = null;
+        // Очищаем таймеры синего экрана
+        if (window._bsodTimer) {
+            clearTimeout(window._bsodTimer);
+            window._bsodTimer = null;
+        }
+        if (window._bsodInterval) {
+            clearInterval(window._bsodInterval);
+            window._bsodInterval = null;
         }
         
         if (glitchInterval) {
@@ -473,7 +477,16 @@
     }
 
     function crashGame(reason) {
-        if (crashTimer) clearTimeout(crashTimer);
+        // Очищаем таймеры синего экрана при краше
+        if (window._bsodTimer) {
+            clearTimeout(window._bsodTimer);
+            window._bsodTimer = null;
+        }
+        if (window._bsodInterval) {
+            clearInterval(window._bsodInterval);
+            window._bsodInterval = null;
+        }
+        
         if (glitchInterval) clearInterval(glitchInterval);
         if (gameLoopId) cancelAnimationFrame(gameLoopId);
         gameLoopId = null;
@@ -518,15 +531,12 @@
             gameCanvas.classList.add('glitch-screen');
         }
         
-        // Останавливаем старый интервал
         if (glitchInterval) clearInterval(glitchInterval);
         
-        // Создаем фантомные объекты для уровней 5-7
         if (currentLevel >= 5 && currentLevel <= 7 && glitchLevel >= 1) {
             glitchInterval = setInterval(() => {
                 if (gameState !== 'playing') return;
                 
-                // Добавляем фантомный объект
                 if (Math.random() < 0.3) {
                     const room = rooms[Math.floor(Math.random() * rooms.length)];
                     if (room) {
@@ -539,7 +549,6 @@
                     }
                 }
                 
-                // Обновляем существующие фантомы
                 for (let i = phantomObjects.length - 1; i >= 0; i--) {
                     phantomObjects[i].life--;
                     if (phantomObjects[i].life <= 0) {
@@ -549,7 +558,6 @@
             }, 2000);
         }
         
-        // Включаем звук глюков на 5 уровне
         if (currentLevel === 5 && glitchSfx) {
             glitchSfx.volume = 0.1;
             glitchSfx.loop = true;
@@ -577,7 +585,6 @@
         const START_X = 120, START_Y = 100;
         const RW = 240, RH = 200;
 
-        // Комнаты
         for (let row = 0; row < ROWS; row++) {
             for (let col = 0; col < COLS; col++) {
                 rooms.push({
@@ -589,7 +596,6 @@
             }
         }
 
-        // Коридоры
         for (let row = 0; row < ROWS; row++) {
             for (let col = 0; col < COLS - 1; col++) {
                 const A = rooms[row * COLS + col];
@@ -616,7 +622,6 @@
             }
         }
 
-        // Монеты
         levelCoinsRequired = 3 + lvl;
         const shuffled = [...rooms].sort(() => Math.random() - 0.5);
         for (let i = 0; i < levelCoinsRequired; i++) {
@@ -629,25 +634,21 @@
             });
         }
 
-        // Старт
         player.x = rooms[0].x + rooms[0].w/2;
         player.y = rooms[0].y + rooms[0].h/2;
 
-        // Выход
         const last = rooms[rooms.length - 1];
         exitDoor = {
             x: last.x + last.w/2, y: last.y + 22,
             w: 40, h: 28, blocked: false, visible: true
         };
 
-        // Уровень 4
         if (lvl === 4) {
             noteObj = { x: rooms[4].x + rooms[4].w/2, y: rooms[4].y + rooms[4].h/2, collected: false, r: 12 };
             exitDoor.blocked = true;
             level4MessageShown = false;
         }
 
-        // Уровень 9
         if (lvl === 9 && rooms[4]) {
             room9Password = 'D3L3T3_M3';
             const cr = rooms[4];
@@ -671,7 +672,6 @@
             levelCoinsRequired++;
         }
 
-        // Уровень 10
         if (lvl === 10 && rooms[4]) {
             boss = {
                 x: rooms[4].x + rooms[4].w/2,
@@ -692,29 +692,49 @@
 
         if (lvl >= 5 && lvl < 10) exitDoor.visible = false;
 
-        // Настройка глюков
         if (lvl >= 5) {
             glitchLevel = Math.min(3, lvl - 4);
         }
         
         applyGlitchEffects();
 
-        // Уровень 8 - синий экран с сохранением
+        // ========== УРОВЕНЬ 8 - СИНИЙ ЭКРАН (ТОЛЬКО 1 РАЗ) ==========
         if (lvl === 8) {
-            saveGame(); // Сохраняем сразу при загрузке 8 уровня
+            saveGame();
+            
+            // Очищаем старые таймеры
+            if (window._bsodTimer) clearTimeout(window._bsodTimer);
+            if (window._bsodInterval) clearInterval(window._bsodInterval);
+            
             let timer = 5;
-            const interval = setInterval(() => {
-                if (gameState === 'playing' && currentLevel === 8) {
+            let crashed = false;
+            
+            window._bsodInterval = setInterval(() => {
+                if (gameState === 'playing' && currentLevel === 8 && !crashed) {
                     showGameMessage(`⚠️ СИСТЕМА НЕСТАБИЛЬНА... ${timer}`, 1000);
                     timer--;
-                    if (timer < 0) {
-                        clearInterval(interval);
+                    
+                    if (timer < 0 && !crashed) {
+                        crashed = true;
+                        clearInterval(window._bsodInterval);
+                        window._bsodInterval = null;
                         crashGame('lvl8');
                     }
                 } else {
-                    clearInterval(interval);
+                    clearInterval(window._bsodInterval);
+                    window._bsodInterval = null;
                 }
             }, 1000);
+            
+            window._bsodTimer = setTimeout(() => {
+                if (!crashed && gameState === 'playing' && currentLevel === 8) {
+                    if (window._bsodInterval) {
+                        clearInterval(window._bsodInterval);
+                        window._bsodInterval = null;
+                    }
+                    crashGame('lvl8');
+                }
+            }, 6000);
         }
         
         if (lvl === 10 && bossSfx) {
@@ -768,7 +788,6 @@
         player.x = Math.max(player.size, Math.min(WORLD_W - player.size, player.x));
         player.y = Math.max(player.size, Math.min(WORLD_H - player.size, player.y));
 
-        // Монеты
         for (let c of coins) {
             if (!c.collected && Math.hypot(player.x - c.x, player.y - c.y) < 22) {
                 c.collected = true;
@@ -781,14 +800,12 @@
             }
         }
 
-        // Записка
         if (noteObj && !noteObj.collected && currentLevel === 4 &&
             Math.hypot(player.x - noteObj.x, player.y - noteObj.y) < 28) {
             noteObj.collected = true;
             openNote();
         }
 
-        // Дверь на 4 уровне
         if (currentLevel === 4 && exitDoor.blocked && !level4MessageShown && levelCoinsGot >= 2) {
             level4MessageShown = true;
             showGameMessage('"Зачем ты это делаешь? Ты только уничтожаешь нас..."', 5000);
@@ -798,20 +815,17 @@
             }, 5000);
         }
 
-        // Показать выход
         if (currentLevel >= 5 && currentLevel < 10 && exitDoor && !exitDoor.visible && levelCoinsGot >= levelCoinsRequired) {
             exitDoor.visible = true;
             showGameMessage('🚪 Выход открыт!', 2000);
         }
 
-        // Выход
         if (exitDoor && exitDoor.visible && !exitDoor.blocked && levelCoinsGot >= levelCoinsRequired &&
             Math.hypot(player.x - exitDoor.x, player.y - exitDoor.y) < 40) {
             nextLevel();
             return;
         }
 
-        // Терминалы + босс
         if (currentLevel === 10 && boss && !bossDefeated) {
             for (let t of terminals) {
                 if (!t.hacked) {
@@ -883,15 +897,12 @@
         ctx.save();
         ctx.translate(-camera.x, -camera.y);
 
-        // Пол
         ctx.fillStyle = '#111122';
         ctx.fillRect(0, 0, WORLD_W, WORLD_H);
 
-        // Коридоры
         ctx.fillStyle = '#1a1a30';
         for (let c of corridors) ctx.fillRect(c.x, c.y, c.w, c.h);
 
-        // Комнаты
         for (let r of rooms) {
             ctx.fillStyle = (currentLevel === 9 && r.id === 4) ? '#1a0808' : '#1e1e38';
             ctx.fillRect(r.x, r.y, r.w, r.h);
@@ -900,7 +911,6 @@
             ctx.strokeRect(r.x, r.y, r.w, r.h);
         }
 
-        // Кровь
         for (let s of bloodSplatters) {
             if (s.isText) {
                 ctx.fillStyle = '#8b0000';
@@ -914,7 +924,6 @@
             }
         }
 
-        // Фантомные объекты (глюки)
         for (let p of phantomObjects) {
             const alpha = Math.min(1, p.life / 60);
             if (p.type === 'coin') {
@@ -928,7 +937,6 @@
             }
         }
 
-        // Монеты
         for (let c of coins) {
             if (!c.collected) {
                 ctx.fillStyle = c.isPassword ? '#ff2222' : '#ffd700';
@@ -948,7 +956,6 @@
             }
         }
 
-        // Записка
         if (noteObj && !noteObj.collected) {
             ctx.fillStyle = '#f4e4c1';
             ctx.fillRect(noteObj.x - 12, noteObj.y - 8, 24, 16);
@@ -957,7 +964,6 @@
             ctx.fillText('📜', noteObj.x - 10, noteObj.y + 5);
         }
 
-        // Выход
         if (exitDoor && exitDoor.visible) {
             ctx.fillStyle = exitDoor.blocked ? '#c22' : '#2c2';
             ctx.shadowColor = exitDoor.blocked ? '#f00' : '#0f0';
@@ -971,7 +977,6 @@
             ctx.textAlign = 'start';
         }
 
-        // Терминалы
         for (let t of terminals) {
             ctx.fillStyle = t.hacked ? '#0f8' : '#f60';
             ctx.fillRect(t.x - t.w / 2, t.y - t.h / 2, t.w, t.h);
@@ -988,7 +993,6 @@
             }
         }
 
-        // Босс
         if (boss && !bossDefeated) {
             if (boss.shieldActive) {
                 ctx.strokeStyle = '#0ff';
@@ -1011,7 +1015,6 @@
             ctx.fillRect(boss.x - 35, boss.y - boss.size / 2 - 16, 70 * (boss.hp / boss.maxHp), 7);
         }
 
-        // Игрок
         ctx.fillStyle = '#00ff88';
         ctx.shadowColor = '#0f0';
         ctx.shadowBlur = 12;
@@ -1023,7 +1026,6 @@
 
         ctx.restore();
 
-        // HUD с эффектом глюков (дрожание текста)
         ctx.save();
         
         if (glitchLevel >= 1 && Math.random() < 0.1) {
@@ -1037,14 +1039,12 @@
         ctx.fillText(`Монеты: ${coinsTotal}`, 10, 40);
         ctx.fillText(`Собрано: ${levelCoinsGot}/${levelCoinsRequired}`, 10, 60);
         
-        // Индикатор глючности
         if (glitchLevel > 0) {
             ctx.fillStyle = `rgba(255, 100, 100, 0.8)`;
             ctx.font = 'bold 10px "Courier New"';
             ctx.fillText(`⚠️ НЕСТАБИЛЬНОСТЬ УРОВНЯ ${glitchLevel}`, viewW - 140, 20);
         }
 
-        // Миникарта
         const mx = viewW - 150, my = viewH - 110, mw = 140, mh = 100;
         ctx.fillStyle = 'rgba(0,0,0,0.7)';
         ctx.fillRect(mx, my, mw, mh);
@@ -1058,7 +1058,6 @@
         ctx.strokeStyle = '#fff';
         ctx.strokeRect(mx + camera.x * sx, my + camera.y * sy, viewW * sx, viewH * sy);
 
-        // Подсказки
         if (currentLevel === 10 && boss && !bossDefeated) {
             ctx.fillStyle = '#ff0';
             ctx.font = '12px "Courier New"';
@@ -1302,6 +1301,7 @@
     console.log('💀 Уровень 10 — босс, терминалы [E], атака [ПРОБЕЛ]');
     console.log('🔑 Пароль: D3L3T3_M3');
     console.log('💾 Прогресс СОХРАНЯЕТСЯ при переходе на 8 уровень!');
+    console.log('⚠️ Синий экран сработает ТОЛЬКО 1 раз на 8 уровне');
 </script>
 </body>
 </html>
