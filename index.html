@@ -263,9 +263,9 @@
         <span>📟 Командная строка</span>
         <span onclick="closeCmd()" style="cursor:pointer;">✕</span>
     </div>
-    <div id="cmdOutput">Microsoft Windows [Version 10.0.19045]<br>(c) Корпорация Майкрософт.<br><br>C:\Users\Player&gt;</div>
+    <div id="cmdOutput">Microsoft Windows [Version 10.0.19045]<br>(c) Корпорация Майкрософт.<br><br>C:\Users\Player></div>
     <div id="cmdInputLine">
-        <span id="cmdPrompt">C:\Users\Player&gt;</span>
+        <span id="cmdPrompt">C:\Users\Player></span>
         <input type="text" id="cmdInput" autocomplete="off" spellcheck="false">
     </div>
 </div>
@@ -318,10 +318,12 @@
     let bossDefeated = false;
     let room9Password = '';
     let level4MessageShown = false;
+    let crashTimer = null;
 
     let player = { x: 400, y: 300, size: 14, speed: 4 };
     let keys = {};
     let camera = { x: 0, y: 0 };
+    let cameraShake = 0;
 
     let rooms = [];
     let corridors = [];
@@ -335,68 +337,170 @@
     let cmdExpectingPassword = false;
     let cmdPasswordTarget = '';
 
+    // ==================== СОХРАНЕНИЕ ====================
+    function saveGame() {
+        if (currentLevel === 8) {
+            const saveData = {
+                level: currentLevel,
+                coinsTotal: coinsTotal,
+                glitchLevel: glitchLevel,
+                savedAt: Date.now()
+            };
+            localStorage.setItem('metaArkade_save', JSON.stringify(saveData));
+            console.log('💾 Игра сохранена перед вылетом');
+        }
+    }
+
+    function loadGame() {
+        const save = localStorage.getItem('metaArkade_save');
+        if (save) {
+            try {
+                const data = JSON.parse(save);
+                if (data.level === 8 && Date.now() - data.savedAt < 3600000) { // 1 час
+                    currentLevel = 8;
+                    coinsTotal = data.coinsTotal;
+                    glitchLevel = data.glitchLevel;
+                    console.log('📀 Загружено сохранение с уровня 8');
+                    return true;
+                } else {
+                    localStorage.removeItem('metaArkade_save');
+                }
+            } catch(e) {}
+        }
+        return false;
+    }
+
+    function clearSave() {
+        localStorage.removeItem('metaArkade_save');
+    }
+
     // ==================== СБРОС ====================
     function fullReset() {
-        gameState = 'desktop'; currentLevel = 1;
-        coinsTotal = 0; levelCoinsGot = 0;
-        glitchLevel = 0; bossDefeated = false;
-        room9Password = ''; level4MessageShown = false;
-        cmdExpectingPassword = false; keys = {};
+        gameState = 'desktop'; 
+        currentLevel = 1;
+        coinsTotal = 0; 
+        levelCoinsGot = 0;
+        glitchLevel = 0; 
+        bossDefeated = false;
+        room9Password = ''; 
+        level4MessageShown = false;
+        cmdExpectingPassword = false; 
+        keys = {};
         bloodSplatters = [];
+        cameraShake = 0;
+        
+        if (crashTimer) {
+            clearTimeout(crashTimer);
+            crashTimer = null;
+        }
+        
         ['gameWindow','blackScreen','noteOverlay','cmdWindow','bsod','credits','gameMessage'].forEach(id => {
-            document.getElementById(id).style.display = 'none';
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
         });
-        document.getElementById('menuExitBtn').style.display = 'none';
-        document.getElementById('desktop').style.display = 'block';
-        document.getElementById('gameCanvas').className = '';
-        bgMusic.pause(); bgMusic.currentTime = 0;
-        bossSfx.pause(); bossSfx.currentTime = 0;
-        glitchSfx.pause(); glitchSfx.currentTime = 0;
+        
+        const menuBtn = document.getElementById('menuExitBtn');
+        if (menuBtn) menuBtn.style.display = 'none';
+        
+        const desktop = document.getElementById('desktop');
+        if (desktop) desktop.style.display = 'block';
+        
+        const gameCanvas = document.getElementById('gameCanvas');
+        if (gameCanvas) gameCanvas.className = '';
+        
+        bgMusic.pause(); 
+        bgMusic.currentTime = 0;
+        bossSfx.pause(); 
+        bossSfx.currentTime = 0;
+        glitchSfx.pause(); 
+        glitchSfx.currentTime = 0;
+        
         if (gameLoopId) cancelAnimationFrame(gameLoopId);
         gameLoopId = null;
+        
+        clearSave();
     }
 
     function launchGame() {
         document.getElementById('desktop').style.display = 'none';
         document.getElementById('menuExitBtn').style.display = 'none';
         document.getElementById('gameWindow').style.display = 'flex';
-        canvas.width = viewW; canvas.height = viewH;
-        gameState = 'playing'; currentLevel = 1;
-        coinsTotal = 0; levelCoinsGot = 0;
-        glitchLevel = 0; bossDefeated = false;
-        level4MessageShown = false; keys = {};
-        bgMusic.volume = 0.25; bgMusic.currentTime = 0;
+        
+        canvas.width = viewW; 
+        canvas.height = viewH;
+        gameState = 'playing';
+        
+        // Пытаемся загрузить сохранение
+        if (!loadGame()) {
+            currentLevel = 1;
+            coinsTotal = 0;
+            glitchLevel = 0;
+        }
+        
+        levelCoinsGot = 0;
+        bossDefeated = false;
+        level4MessageShown = false;
+        keys = {};
+        cameraShake = 0;
+        
+        bgMusic.volume = 0.25;
+        bgMusic.currentTime = 0;
         bgMusic.play().catch(() => {});
+        
         generateLevel(currentLevel);
+        applyGlitchClass();
+        
         if (gameLoopId) cancelAnimationFrame(gameLoopId);
         gameLoopId = requestAnimationFrame(gameLoop);
     }
 
-    function closeGameWindow() { crashGame('closed'); }
+    function closeGameWindow() { 
+        crashGame('closed'); 
+    }
 
     function crashGame(reason) {
+        if (crashTimer) clearTimeout(crashTimer);
         if (gameLoopId) cancelAnimationFrame(gameLoopId);
-        gameLoopId = null; gameState = 'bsod';
+        gameLoopId = null;
+        gameState = 'bsod';
+        
         document.getElementById('gameWindow').style.display = 'none';
         document.getElementById('gameMessage').style.display = 'none';
         document.getElementById('gameCanvas').className = '';
         document.getElementById('menuExitBtn').style.display = 'none';
-        bgMusic.pause(); bossSfx.pause(); glitchSfx.pause();
+        
+        bgMusic.pause();
+        bossSfx.pause();
+        glitchSfx.pause();
+        
         document.getElementById('bsod').style.display = 'block';
-        let p = 0; const dEl = document.getElementById('dumpPercent');
+        let p = 0;
+        const dEl = document.getElementById('dumpPercent');
         const iv = setInterval(() => {
-            p += Math.floor(Math.random()*12)+6;
-            if(p>=100){p=100;clearInterval(iv);dEl.textContent='100';
-                setTimeout(()=>{document.getElementById('bsod').style.display='none';fullReset();},2800);}
-            dEl.textContent = Math.min(p,100);
-        },350);
+            p += Math.floor(Math.random() * 12) + 6;
+            if (p >= 100) {
+                p = 100;
+                clearInterval(iv);
+                dEl.textContent = '100';
+                setTimeout(() => {
+                    document.getElementById('bsod').style.display = 'none';
+                    fullReset();
+                }, 2800);
+            }
+            dEl.textContent = Math.min(p, 100);
+        }, 350);
     }
 
     // ==================== ГЕНЕРАЦИЯ УРОВНЯ ====================
     function generateLevel(lvl) {
-        rooms = []; corridors = []; coins = [];
-        terminals = []; boss = null; noteObj = null;
-        exitDoor = null; bloodSplatters = [];
+        rooms = []; 
+        corridors = []; 
+        coins = [];
+        terminals = []; 
+        boss = null; 
+        noteObj = null;
+        exitDoor = null; 
+        bloodSplatters = [];
 
         const CORRIDOR = 80;
         const COLS = 3, ROWS = 3;
@@ -416,7 +520,7 @@
             }
         }
 
-        // Горизонтальные коридоры (заходят внутрь комнат)
+        // Горизонтальные коридоры
         for (let row = 0; row < ROWS; row++) {
             for (let col = 0; col < COLS - 1; col++) {
                 const A = rooms[row * COLS + col];
@@ -430,7 +534,7 @@
             }
         }
 
-        // Вертикальные коридоры (заходят внутрь комнат)
+        // Вертикальные коридоры
         for (let row = 0; row < ROWS - 1; row++) {
             for (let col = 0; col < COLS; col++) {
                 const A = rooms[row * COLS + col];
@@ -476,11 +580,11 @@
         }
 
         // Уровень 9: КРОВАВАЯ КОМНАТА
-        if (lvl === 9) {
+        if (lvl === 9 && rooms[4]) {
             room9Password = 'D3L3T3_M3';
             const cr = rooms[4];
-            // Кровавые пятна
-            for (let i = 0; i < 60; i++) {
+            // Кровавые пятна (уменьшено для оптимизации)
+            for (let i = 0; i < 40; i++) {
                 bloodSplatters.push({
                     x: cr.x + Math.random() * cr.w,
                     y: cr.y + Math.random() * cr.h,
@@ -489,9 +593,9 @@
                 });
             }
             // Кровавые надписи
-            bloodSplatters.push({isText:true, text:'НЕ ВХОДИ', textX:cr.x+15, textY:cr.y+30});
-            bloodSplatters.push({isText:true, text:'БЕГИ', textX:cr.x+cr.w-80, textY:cr.y+cr.h/2});
-            bloodSplatters.push({isText:true, text:room9Password, textX:cr.x+20, textY:cr.y+cr.h-25});
+            bloodSplatters.push({isText: true, text: 'НЕ ВХОДИ', textX: cr.x + 15, textY: cr.y + 30});
+            bloodSplatters.push({isText: true, text: 'БЕГИ', textX: cr.x + cr.w - 80, textY: cr.y + cr.h/2});
+            bloodSplatters.push({isText: true, text: room9Password, textX: cr.x + 20, textY: cr.y + cr.h - 25});
             // Монета-пароль
             coins.push({
                 x: cr.x + cr.w/2, y: cr.y + cr.h/2 + 25,
@@ -502,7 +606,7 @@
         }
 
         // Уровень 10
-        if (lvl === 10) {
+        if (lvl === 10 && rooms[4]) {
             boss = {
                 x: rooms[4].x + rooms[4].w/2,
                 y: rooms[4].y + rooms[4].h/2,
@@ -510,10 +614,12 @@
             };
             bossDefeated = false;
             [rooms[0], rooms[2], rooms[6], rooms[8]].forEach(r => {
-                terminals.push({
-                    x: r.x + r.w/2, y: r.y + r.h/2,
-                    hacked: false, w: 28, h: 28, hacking: 0
-                });
+                if (r) {
+                    terminals.push({
+                        x: r.x + r.w/2, y: r.y + r.h/2,
+                        hacked: false, w: 28, h: 28, hacking: 0
+                    });
+                }
             });
             exitDoor.visible = false;
         }
@@ -523,25 +629,62 @@
         if (lvl >= 5) {
             glitchLevel = Math.min(3, lvl - 4);
             applyGlitchClass();
-            if (lvl === 5 && glitchSfx) { glitchSfx.volume=0.15; glitchSfx.play().catch(()=>{}); }
+            if (lvl === 5 && glitchSfx) {
+                glitchSfx.volume = 0.15;
+                glitchSfx.play().catch(() => {});
+            }
         }
 
-        if (lvl === 8) setTimeout(() => { if(gameState==='playing'&&currentLevel===8) crashGame('lvl8'); }, 5000);
-        if (lvl === 10 && bossSfx) { bossSfx.volume=0.35; bossSfx.currentTime=0; bossSfx.play().catch(()=>{}); }
+        // Уровень 8 - синий экран с отсчетом
+        if (lvl === 8) {
+            let timer = 5;
+            const interval = setInterval(() => {
+                if (gameState === 'playing' && currentLevel === 8) {
+                    showGameMessage(`⚠️ СИСТЕМА НЕСТАБИЛЬНА... ${timer}`, 1000);
+                    timer--;
+                    if (timer < 0) {
+                        clearInterval(interval);
+                        saveGame(); // Сохраняем перед вылетом
+                        crashGame('lvl8');
+                    }
+                } else {
+                    clearInterval(interval);
+                }
+            }, 1000);
+        }
+        
+        if (lvl === 10 && bossSfx) {
+            bossSfx.volume = 0.35;
+            bossSfx.currentTime = 0;
+            bossSfx.play().catch(() => {});
+        }
     }
 
     function applyGlitchClass() {
         const c = document.getElementById('gameCanvas');
-        c.classList.remove('glitch-stage1','glitch-stage2','glitch-stage3');
-        if (glitchLevel===1) c.classList.add('glitch-stage1');
-        if (glitchLevel===2) c.classList.add('glitch-stage2');
-        if (glitchLevel===3) c.classList.add('glitch-stage3');
+        c.classList.remove('glitch-stage1', 'glitch-stage2', 'glitch-stage3');
+        if (glitchLevel === 1) c.classList.add('glitch-stage1');
+        if (glitchLevel === 2) c.classList.add('glitch-stage2');
+        if (glitchLevel === 3) c.classList.add('glitch-stage3');
     }
 
     // ==================== КАМЕРА ====================
     function updateCamera() {
+        if (!viewW || !viewH) {
+            viewW = canvas.clientWidth;
+            viewH = canvas.clientHeight;
+        }
+        
         camera.x = player.x - viewW/2;
         camera.y = player.y - viewH/2;
+        
+        // Добавляем эффект дрожания на глючных уровнях
+        if (glitchLevel > 0 && gameState === 'playing') {
+            const shake = Math.sin(Date.now() * 0.02) * glitchLevel * 1.5;
+            camera.x += shake;
+            camera.y += shake * 0.5;
+        }
+        
         camera.x = Math.max(0, Math.min(WORLD_W - viewW, camera.x));
         camera.y = Math.max(0, Math.min(WORLD_H - viewH, camera.y));
     }
@@ -567,21 +710,21 @@
         if (keys['ArrowUp'] || keys['KeyW']) dy = -player.speed;
         if (keys['ArrowDown'] || keys['KeyS']) dy = player.speed;
 
-        // Пробуем двигаться
         let nx = player.x + dx;
         let ny = player.y + dy;
 
         if (canMoveTo(nx, player.y)) player.x = nx;
         if (canMoveTo(player.x, ny)) player.y = ny;
 
-        // Границы мира
         player.x = Math.max(player.size, Math.min(WORLD_W - player.size, player.x));
         player.y = Math.max(player.size, Math.min(WORLD_H - player.size, player.y));
 
         // Монеты
         for (let c of coins) {
             if (!c.collected && Math.hypot(player.x - c.x, player.y - c.y) < 22) {
-                c.collected = true; coinsTotal++; levelCoinsGot++;
+                c.collected = true;
+                coinsTotal++;
+                levelCoinsGot++;
                 if (c.isPassword) {
                     showGameMessage('🔑 Пароль: ' + c.label + '  (запомни!)', 5000);
                     room9Password = c.label;
@@ -590,51 +733,84 @@
         }
 
         // Записка
-        if (noteObj && !noteObj.collected && currentLevel===4 &&
+        if (noteObj && !noteObj.collected && currentLevel === 4 &&
             Math.hypot(player.x - noteObj.x, player.y - noteObj.y) < 28) {
-            noteObj.collected = true; openNote();
+            noteObj.collected = true;
+            openNote();
         }
 
         // Дверь на 4 уровне
-        if (currentLevel===4 && exitDoor.blocked && !level4MessageShown && levelCoinsGot>=2) {
+        if (currentLevel === 4 && exitDoor.blocked && !level4MessageShown && levelCoinsGot >= 2) {
             level4MessageShown = true;
             showGameMessage('"Зачем ты это делаешь? Ты только уничтожаешь нас..."', 5000);
-            setTimeout(() => { exitDoor.blocked = false; hideGameMessage(); }, 5000);
+            setTimeout(() => {
+                exitDoor.blocked = false;
+                hideGameMessage();
+            }, 5000);
         }
 
         // Показать выход
-        if (currentLevel>=5 && currentLevel<10 && exitDoor && !exitDoor.visible && levelCoinsGot>=levelCoinsRequired) {
+        if (currentLevel >= 5 && currentLevel < 10 && exitDoor && !exitDoor.visible && levelCoinsGot >= levelCoinsRequired) {
             exitDoor.visible = true;
             showGameMessage('🚪 Выход открыт!', 2000);
         }
 
         // Выход
-        if (exitDoor && exitDoor.visible && !exitDoor.blocked && levelCoinsGot>=levelCoinsRequired &&
+        if (exitDoor && exitDoor.visible && !exitDoor.blocked && levelCoinsGot >= levelCoinsRequired &&
             Math.hypot(player.x - exitDoor.x, player.y - exitDoor.y) < 40) {
-            nextLevel(); return;
+            nextLevel();
+            return;
         }
 
         // Терминалы + босс
-        if (currentLevel===10 && boss && !bossDefeated) {
+        if (currentLevel === 10 && boss && !bossDefeated) {
             for (let t of terminals) {
                 if (!t.hacked) {
-                    if (Math.hypot(player.x - t.x, player.y - t.y) < 35 && keys['KeyE']) {
-                        t.hacking++;
-                        if (t.hacking >= 100) { t.hacked = true; checkTerminals(); }
+                    // Проверяем, что игрок в той же комнате, что и терминал
+                    let inSameRoom = false;
+                    for (let r of rooms) {
+                        if (player.x > r.x && player.x < r.x + r.w &&
+                            player.y > r.y && player.y < r.y + r.h &&
+                            t.x > r.x && t.x < r.x + r.w &&
+                            t.y > r.y && t.y < r.y + r.h) {
+                            inSameRoom = true;
+                            break;
+                        }
+                    }
+                    
+                    if (inSameRoom && Math.hypot(player.x - t.x, player.y - t.y) < 35 && keys['KeyE']) {
+                        t.hacking += 2;
+                        if (t.hacking >= 100) {
+                            t.hacked = true;
+                            checkTerminals();
+                            showGameMessage(`🔓 Терминал ${terminals.filter(t => t.hacked).length}/4 взломан`, 1500);
+                        }
                     } else if (Math.hypot(player.x - t.x, player.y - t.y) >= 35) {
-                        t.hacking = 0;
+                        if (t.hacking > 0) t.hacking = Math.max(0, t.hacking - 1);
                     }
                 }
             }
+            
+            // Атака босса только если щит снят
             if (!boss.shieldActive && keys['Space'] && Math.hypot(player.x - boss.x, player.y - boss.y) < 80) {
                 boss.hp -= 2.5;
                 if (boss.hp <= 0) {
-                    boss.hp = 0; bossDefeated = true;
+                    boss.hp = 0;
+                    bossDefeated = true;
                     showGameMessage('💀 БОСС ПОВЕРЖЕН!', 3500);
                     bossSfx.pause();
-                    setTimeout(() => { if(gameState==='playing') crashGame('boss'); }, 3500);
+                    setTimeout(() => {
+                        if (gameState === 'playing') crashGame('boss');
+                    }, 3500);
                 }
+                // Эффект попадания
+                cameraShake = 5;
             }
+        }
+        
+        // Эффект дрожания камеры
+        if (cameraShake > 0) {
+            cameraShake--;
         }
     }
 
@@ -661,10 +837,19 @@
     // ==================== ОТРИСОВКА ====================
     function draw() {
         ctx.clearRect(0, 0, viewW, viewH);
-        ctx.fillStyle = '#0a0a14'; ctx.fillRect(0, 0, viewW, viewH);
+        ctx.fillStyle = '#0a0a14';
+        ctx.fillRect(0, 0, viewW, viewH);
 
         ctx.save();
-        ctx.translate(-camera.x, -camera.y);
+        
+        // Эффект дрожания камеры при атаке
+        let shakeX = 0, shakeY = 0;
+        if (cameraShake > 0) {
+            shakeX = (Math.random() - 0.5) * cameraShake;
+            shakeY = (Math.random() - 0.5) * cameraShake;
+        }
+        
+        ctx.translate(-camera.x + shakeX, -camera.y + shakeY);
 
         // Пол
         ctx.fillStyle = '#111122';
@@ -676,10 +861,10 @@
 
         // Комнаты
         for (let r of rooms) {
-            ctx.fillStyle = (currentLevel===9 && r.id===4) ? '#1a0808' : '#1e1e38';
+            ctx.fillStyle = (currentLevel === 9 && r.id === 4) ? '#1a0808' : '#1e1e38';
             ctx.fillRect(r.x, r.y, r.w, r.h);
-            ctx.strokeStyle = (currentLevel===9 && r.id===4) ? '#8b0000' : '#4a4a6a';
-            ctx.lineWidth = (currentLevel===9 && r.id===4) ? 3 : 2;
+            ctx.strokeStyle = (currentLevel === 9 && r.id === 4) ? '#8b0000' : '#4a4a6a';
+            ctx.lineWidth = (currentLevel === 9 && r.id === 4) ? 3 : 2;
             ctx.strokeRect(r.x, r.y, r.w, r.h);
         }
 
@@ -692,8 +877,21 @@
             } else {
                 ctx.fillStyle = `rgba(139,0,0,${s.alpha})`;
                 ctx.beginPath();
-                ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+                ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
                 ctx.fill();
+            }
+        }
+
+        // Фантомные объекты для уровней 6-7
+        if ((currentLevel === 6 || currentLevel === 7) && Math.random() < 0.1) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.3})`;
+            for (let i = 0; i < 3; i++) {
+                ctx.fillRect(
+                    Math.random() * WORLD_W,
+                    Math.random() * WORLD_H,
+                    Math.random() * 50 + 10,
+                    Math.random() * 50 + 10
+                );
             }
         }
 
@@ -703,7 +901,9 @@
                 ctx.fillStyle = c.isPassword ? '#ff2222' : '#ffd700';
                 ctx.shadowColor = c.isPassword ? '#f00' : '#fa0';
                 ctx.shadowBlur = c.isPassword ? 20 : 10;
-                ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+                ctx.fill();
                 ctx.shadowBlur = 0;
                 if (c.isPassword) {
                     ctx.fillStyle = '#f00';
@@ -718,9 +918,10 @@
         // Записка
         if (noteObj && !noteObj.collected) {
             ctx.fillStyle = '#f4e4c1';
-            ctx.fillRect(noteObj.x-12, noteObj.y-8, 24, 16);
-            ctx.fillStyle = '#000'; ctx.font = '12px serif';
-            ctx.fillText('📜', noteObj.x-10, noteObj.y+5);
+            ctx.fillRect(noteObj.x - 12, noteObj.y - 8, 24, 16);
+            ctx.fillStyle = '#000';
+            ctx.font = '12px serif';
+            ctx.fillText('📜', noteObj.x - 10, noteObj.y + 5);
         }
 
         // Выход
@@ -728,98 +929,147 @@
             ctx.fillStyle = exitDoor.blocked ? '#c22' : '#2c2';
             ctx.shadowColor = exitDoor.blocked ? '#f00' : '#0f0';
             ctx.shadowBlur = 15;
-            ctx.fillRect(exitDoor.x - exitDoor.w/2, exitDoor.y - exitDoor.h/2, exitDoor.w, exitDoor.h);
+            ctx.fillRect(exitDoor.x - exitDoor.w / 2, exitDoor.y - exitDoor.h / 2, exitDoor.w, exitDoor.h);
             ctx.shadowBlur = 0;
-            ctx.fillStyle = '#000'; ctx.font = 'bold 10px "Courier New"';
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 10px "Courier New"';
             ctx.textAlign = 'center';
-            ctx.fillText(exitDoor.blocked?'ЗАКРЫТО':'ВЫХОД', exitDoor.x, exitDoor.y+4);
+            ctx.fillText(exitDoor.blocked ? 'ЗАКРЫТО' : 'ВЫХОД', exitDoor.x, exitDoor.y + 4);
             ctx.textAlign = 'start';
         }
 
         // Терминалы
         for (let t of terminals) {
             ctx.fillStyle = t.hacked ? '#0f8' : '#f60';
-            ctx.fillRect(t.x - t.w/2, t.y - t.h/2, t.w, t.h);
-            ctx.fillStyle = '#000'; ctx.font = 'bold 10px "Courier New"';
-            ctx.textAlign = 'center'; ctx.fillText(t.hacked?'✓':'E', t.x, t.y+4); ctx.textAlign = 'start';
-            if (t.hacking>0 && !t.hacked) {
+            ctx.fillRect(t.x - t.w / 2, t.y - t.h / 2, t.w, t.h);
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 10px "Courier New"';
+            ctx.textAlign = 'center';
+            ctx.fillText(t.hacked ? '✓' : 'E', t.x, t.y + 4);
+            ctx.textAlign = 'start';
+            if (t.hacking > 0 && !t.hacked) {
                 ctx.fillStyle = '#ff0';
-                ctx.fillRect(t.x-20, t.y-22, 40*(t.hacking/100), 5);
-                ctx.strokeStyle = '#fff'; ctx.strokeRect(t.x-20, t.y-22, 40, 5);
+                ctx.fillRect(t.x - 20, t.y - 22, 40 * (t.hacking / 100), 5);
+                ctx.strokeStyle = '#fff';
+                ctx.strokeRect(t.x - 20, t.y - 22, 40, 5);
             }
         }
 
         // Босс
         if (boss && !bossDefeated) {
             if (boss.shieldActive) {
-                ctx.strokeStyle = '#0ff'; ctx.lineWidth = 2;
-                ctx.shadowColor = '#0ff'; ctx.shadowBlur = 25;
-                ctx.beginPath(); ctx.arc(boss.x, boss.y, boss.size+8, 0, Math.PI*2); ctx.stroke();
+                ctx.strokeStyle = '#0ff';
+                ctx.lineWidth = 2;
+                ctx.shadowColor = '#0ff';
+                ctx.shadowBlur = 25;
+                ctx.beginPath();
+                ctx.arc(boss.x, boss.y, boss.size + 8, 0, Math.PI * 2);
+                ctx.stroke();
                 ctx.shadowBlur = 0;
             }
-            ctx.fillStyle = '#f0f'; ctx.shadowColor = '#f0f'; ctx.shadowBlur = 20;
-            ctx.fillRect(boss.x - boss.size/2, boss.y - boss.size/2, boss.size, boss.size);
+            ctx.fillStyle = '#f0f';
+            ctx.shadowColor = '#f0f';
+            ctx.shadowBlur = 20;
+            ctx.fillRect(boss.x - boss.size / 2, boss.y - boss.size / 2, boss.size, boss.size);
             ctx.shadowBlur = 0;
-            ctx.fillStyle = '#111'; ctx.fillRect(boss.x-35, boss.y-boss.size/2-16, 70, 7);
-            ctx.fillStyle = boss.hp>30?'#0f0':'#f33';
-            ctx.fillRect(boss.x-35, boss.y-boss.size/2-16, 70*(boss.hp/boss.maxHp), 7);
+            ctx.fillStyle = '#111';
+            ctx.fillRect(boss.x - 35, boss.y - boss.size / 2 - 16, 70, 7);
+            ctx.fillStyle = boss.hp > 30 ? '#0f0' : '#f33';
+            ctx.fillRect(boss.x - 35, boss.y - boss.size / 2 - 16, 70 * (boss.hp / boss.maxHp), 7);
         }
 
         // Игрок
-        ctx.fillStyle = '#00ff88'; ctx.shadowColor = '#0f0'; ctx.shadowBlur = 12;
-        ctx.fillRect(player.x - player.size/2, player.y - player.size/2, player.size, player.size);
+        ctx.fillStyle = '#00ff88';
+        ctx.shadowColor = '#0f0';
+        ctx.shadowBlur = 12;
+        ctx.fillRect(player.x - player.size / 2, player.y - player.size / 2, player.size, player.size);
         ctx.shadowBlur = 0;
         ctx.fillStyle = '#000';
-        ctx.fillRect(player.x-3, player.y-3, 2, 2);
-        ctx.fillRect(player.x+1, player.y-3, 2, 2);
+        ctx.fillRect(player.x - 3, player.y - 3, 2, 2);
+        ctx.fillRect(player.x + 1, player.y - 3, 2, 2);
 
         ctx.restore();
 
-        // HUD
-        ctx.fillStyle = '#fff'; ctx.font = 'bold 13px "Courier New"';
+        // HUD с эффектами глюков
+        ctx.save();
+        if (glitchLevel > 0 && Math.random() < 0.3) {
+            ctx.font = `bold ${13 + Math.random() * 5}px "Courier New"`;
+            ctx.fillStyle = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        } else {
+            ctx.font = 'bold 13px "Courier New"';
+            ctx.fillStyle = '#fff';
+        }
+        
         ctx.fillText(`Уровень: ${currentLevel}/${MAX_LEVELS}`, 10, 20);
         ctx.fillText(`Монеты: ${coinsTotal}`, 10, 40);
         ctx.fillText(`Собрано: ${levelCoinsGot}/${levelCoinsRequired}`, 10, 60);
+        
+        // Индикатор глючности
+        if (glitchLevel > 0) {
+            ctx.fillStyle = `rgba(255, 0, ${255 - glitchLevel * 85}, 0.7)`;
+            ctx.font = 'bold 10px "Courier New"';
+            ctx.fillText(`⚠️ ГЛЮКИ УРОВНЯ ${glitchLevel}`, viewW - 130, 20);
+        }
+        
+        ctx.font = 'bold 13px "Courier New"';
+        ctx.fillStyle = '#fff';
 
         // Миникарта
         const mx = viewW - 150, my = viewH - 110, mw = 140, mh = 100;
-        ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(mx, my, mw, mh);
-        ctx.strokeStyle = '#555'; ctx.strokeRect(mx, my, mw, mh);
-        const sx = mw/WORLD_W, sy = mh/WORLD_H;
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillRect(mx, my, mw, mh);
+        ctx.strokeStyle = '#555';
+        ctx.strokeRect(mx, my, mw, mh);
+        const sx = mw / WORLD_W, sy = mh / WORLD_H;
         ctx.fillStyle = '#444';
-        for (let r of rooms) ctx.fillRect(mx+r.x*sx, my+r.y*sy, r.w*sx, r.h*sy);
-        ctx.fillStyle = '#0f0'; ctx.fillRect(mx+player.x*sx-1.5, my+player.y*sy-1.5, 3, 3);
-        ctx.strokeStyle = '#fff'; ctx.strokeRect(mx+camera.x*sx, my+camera.y*sy, viewW*sx, viewH*sy);
+        for (let r of rooms) ctx.fillRect(mx + r.x * sx, my + r.y * sy, r.w * sx, r.h * sy);
+        ctx.fillStyle = '#0f0';
+        ctx.fillRect(mx + player.x * sx - 1.5, my + player.y * sy - 1.5, 3, 3);
+        ctx.strokeStyle = '#fff';
+        ctx.strokeRect(mx + camera.x * sx, my + camera.y * sy, viewW * sx, viewH * sy);
 
         // Подсказки
-        if (currentLevel===10 && boss && !bossDefeated) {
-            ctx.fillStyle = '#ff0'; ctx.font = '12px "Courier New"'; ctx.textAlign = 'center';
-            ctx.fillText(boss.shieldActive?'🔓 Взломай 4 терминала [E]':'⚔️ Атакуй босса [ПРОБЕЛ]!', viewW/2, viewH-10);
+        if (currentLevel === 10 && boss && !bossDefeated) {
+            ctx.fillStyle = '#ff0';
+            ctx.font = '12px "Courier New"';
+            ctx.textAlign = 'center';
+            ctx.fillText(boss.shieldActive ? '🔓 Взломай 4 терминала [E]' : '⚔️ Атакуй босса [ПРОБЕЛ]!', viewW / 2, viewH - 10);
             ctx.textAlign = 'start';
         }
+        
+        ctx.restore();
     }
 
     // ==================== ЗАПИСКА ====================
-    function openNote() { document.getElementById('noteOverlay').style.display = 'block'; }
+    function openNote() {
+        document.getElementById('noteOverlay').style.display = 'block';
+    }
+    
     function closeNote() {
         document.getElementById('noteOverlay').style.display = 'none';
         showBlackScreen();
     }
+    
     function showBlackScreen() {
         document.getElementById('blackScreen').style.display = 'flex';
         bgMusic.volume = 0.04;
         setTimeout(() => {
             document.getElementById('blackScreen').style.display = 'none';
-            bgMusic.volume = 0.25; keys = {};
+            bgMusic.volume = 0.25;
+            keys = {};
         }, 4200);
     }
 
     // ==================== ПЕРЕХОДЫ ====================
     function nextLevel() {
         currentLevel++;
-        if (currentLevel > MAX_LEVELS) { winGame(); return; }
+        if (currentLevel > MAX_LEVELS) {
+            winGame();
+            return;
+        }
         levelCoinsGot = 0;
         generateLevel(currentLevel);
+        applyGlitchClass();
     }
 
     function winGame() {
@@ -828,12 +1078,17 @@
         document.getElementById('gameWindow').style.display = 'none';
         document.getElementById('gameMessage').style.display = 'none';
         document.getElementById('menuExitBtn').style.display = 'none';
-        bgMusic.pause(); bossSfx.pause();
+        bgMusic.pause();
+        bossSfx.pause();
         document.getElementById('bsod').style.display = 'block';
-        let p = 0; const dEl = document.getElementById('dumpPercent');
+        let p = 0;
+        const dEl = document.getElementById('dumpPercent');
         const iv = setInterval(() => {
             p += 18;
-            if (p >= 100) { p = 100; clearInterval(iv); dEl.textContent = '100';
+            if (p >= 100) {
+                p = 100;
+                clearInterval(iv);
+                dEl.textContent = '100';
                 setTimeout(() => {
                     document.getElementById('bsod').style.display = 'none';
                     document.getElementById('credits').style.display = 'flex';
@@ -847,42 +1102,70 @@
 
     function exitToCredits() {
         if (gameLoopId) cancelAnimationFrame(gameLoopId);
-        gameLoopId = null; gameState = 'credits';
-        ['gameWindow','gameMessage','menuExitBtn'].forEach(id => document.getElementById(id).style.display='none');
-        document.getElementById('gameCanvas').className = '';
-        bgMusic.pause(); bossSfx.pause(); glitchSfx.pause();
-        document.getElementById('bsod').style.display = 'none';
-        document.getElementById('credits').style.display = 'flex';
+        gameLoopId = null;
+        gameState = 'credits';
+        ['gameWindow', 'gameMessage', 'menuExitBtn'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        const gameCanvas = document.getElementById('gameCanvas');
+        if (gameCanvas) gameCanvas.className = '';
+        bgMusic.pause();
+        bossSfx.pause();
+        glitchSfx.pause();
+        const bsod = document.getElementById('bsod');
+        if (bsod) bsod.style.display = 'none';
+        const credits = document.getElementById('credits');
+        if (credits) credits.style.display = 'flex';
+        clearSave();
     }
 
     function showGameMessage(msg, dur) {
         const el = document.getElementById('gameMessage');
-        el.textContent = msg; el.style.display = 'block';
+        if (!el) return;
+        el.textContent = msg;
+        el.style.display = 'block';
         clearTimeout(el._t);
         if (dur) el._t = setTimeout(hideGameMessage, dur);
     }
+    
     function hideGameMessage() {
         const el = document.getElementById('gameMessage');
-        el.style.display = 'none'; clearTimeout(el._t);
+        if (el) {
+            el.style.display = 'none';
+            clearTimeout(el._t);
+        }
     }
 
     // ==================== КОМАНДНАЯ СТРОКА ====================
     function openCmd() {
-        document.getElementById('cmdWindow').style.display = 'flex';
-        document.getElementById('cmdOutput').innerHTML = 'Microsoft Windows [Version 10.0.19045]<br>(c) Корпорация Майкрософт.<br><br>C:\\Users\\Player&gt;';
+        const cmdWindow = document.getElementById('cmdWindow');
+        if (!cmdWindow) return;
+        cmdWindow.style.display = 'flex';
+        const cmdOutput = document.getElementById('cmdOutput');
+        if (cmdOutput) {
+            cmdOutput.innerHTML = 'Microsoft Windows [Version 10.0.19045]<br>(c) Корпорация Майкрософт.<br><br>C:\\Users\\Player>';
+        }
         cmdExpectingPassword = false;
-        document.getElementById('cmdInput').value = '';
-        document.getElementById('cmdInput').focus();
+        const cmdInput = document.getElementById('cmdInput');
+        if (cmdInput) {
+            cmdInput.value = '';
+            cmdInput.focus();
+        }
     }
+    
     function closeCmd() {
-        document.getElementById('cmdWindow').style.display = 'none';
+        const cmdWindow = document.getElementById('cmdWindow');
+        if (cmdWindow) cmdWindow.style.display = 'none';
         cmdExpectingPassword = false;
     }
 
-    document.getElementById('cmdInput').addEventListener('keydown', function(e) {
+    document.getElementById('cmdInput')?.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
             const cmd = this.value.trim();
             const out = document.getElementById('cmdOutput');
+            if (!out) return;
+            
             if (cmdExpectingPassword) {
                 if (cmd.toLowerCase() === cmdPasswordTarget.toLowerCase()) {
                     out.innerHTML += `${cmd}<br>✅ Пароль верен. Удаление...<br>`;
@@ -891,37 +1174,54 @@
                         setTimeout(() => {
                             closeCmd();
                             document.getElementById('bsod').style.display = 'block';
-                            let p=0; const dEl=document.getElementById('dumpPercent');
-                            const iv=setInterval(()=>{
-                                p+=22; if(p>=100){p=100;clearInterval(iv);dEl.textContent='100';
-                                    setTimeout(()=>{
-                                        document.getElementById('bsod').style.display='none';
-                                        document.getElementById('credits').style.display='flex';
-                                        document.getElementById('menuExitBtn').style.display='block';
-                                        gameState='credits';
-                                    },2000);}
-                                dEl.textContent=Math.min(p,100);
-                            },280);
-                        },1600);
-                    },1200);
+                            let p = 0;
+                            const dEl = document.getElementById('dumpPercent');
+                            const iv = setInterval(() => {
+                                p += 22;
+                                if (p >= 100) {
+                                    p = 100;
+                                    clearInterval(iv);
+                                    dEl.textContent = '100';
+                                    setTimeout(() => {
+                                        document.getElementById('bsod').style.display = 'none';
+                                        document.getElementById('credits').style.display = 'flex';
+                                        document.getElementById('menuExitBtn').style.display = 'block';
+                                        gameState = 'credits';
+                                    }, 2000);
+                                }
+                                dEl.textContent = Math.min(p, 100);
+                            }, 280);
+                        }, 1600);
+                    }, 1200);
                 } else {
-                    out.innerHTML += `${cmd}<br>❌ Неверный пароль.<br><br>C:\\Users\\Player&gt;`;
+                    out.innerHTML += `${cmd}<br>❌ Неверный пароль.<br><br>C:\\Users\\Player>`;
                 }
                 cmdExpectingPassword = false;
             } else {
                 out.innerHTML += `${cmd}<br>`;
                 const lc = cmd.toLowerCase();
-                if (lc==='help') out.innerHTML += 'delete this_game.exe — удалить (пароль)<br>dir — файлы<br>cls — очистить<br>exit — выход<br>';
-                else if (lc==='dir') out.innerHTML += 'this_game.exe [ЗАРАЖЕНО]<br>system_files/ [ПОВРЕЖДЕНО]<br>';
-                else if (lc==='delete this_game.exe'||lc==='del this_game.exe') {
+                if (lc === 'help') {
+                    out.innerHTML += 'delete this_game.exe — удалить (пароль)<br>';
+                    out.innerHTML += 'dir — файлы<br>';
+                    out.innerHTML += 'cls — очистить<br>';
+                    out.innerHTML += 'exit — выход<br>';
+                    out.innerHTML += 'ПОДСКАЗКА: пароль написан на стене в кровавой комнате<br>';
+                } else if (lc === 'dir') {
+                    out.innerHTML += 'this_game.exe [ЗАРАЖЕНО]<br>system_files/ [ПОВРЕЖДЕНО]<br>';
+                } else if (lc === 'delete this_game.exe' || lc === 'del this_game.exe') {
                     out.innerHTML += 'Пароль: ';
                     cmdExpectingPassword = true;
                     cmdPasswordTarget = room9Password || 'D3L3T3_M3';
+                } else if (lc === 'cls') {
+                    out.innerHTML = '';
+                    return;
+                } else if (lc === 'exit') {
+                    closeCmd();
+                    return;
+                } else if (cmd) {
+                    out.innerHTML += `"${cmd}" не распознано.<br>`;
                 }
-                else if (lc==='cls') { out.innerHTML = ''; return; }
-                else if (lc==='exit') { closeCmd(); return; }
-                else if (cmd) out.innerHTML += `"${cmd}" не распознано.<br>`;
-                if (!cmdExpectingPassword) out.innerHTML += '<br>C:\\Users\\Player&gt;';
+                if (!cmdExpectingPassword) out.innerHTML += '<br>C:\\Users\\Player>';
             }
             this.value = '';
             out.scrollTop = out.scrollHeight;
@@ -946,15 +1246,22 @@
     // ==================== УПРАВЛЕНИЕ ====================
     document.addEventListener('keydown', e => {
         keys[e.code] = true;
-        if (['KeyE','Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD'].includes(e.code)) {
-            if (gameState==='playing') e.preventDefault();
+        if (['KeyE', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
+            if (gameState === 'playing') e.preventDefault();
         }
     });
-    document.addEventListener('keyup', e => { keys[e.code] = false; });
-    document.addEventListener('contextmenu', e => { if (gameState==='playing'||gameState==='black_screen') e.preventDefault(); });
+    
+    document.addEventListener('keyup', e => {
+        keys[e.code] = false;
+    });
+    
+    document.addEventListener('contextmenu', e => {
+        if (gameState === 'playing' || gameState === 'black_screen') e.preventDefault();
+    });
 
     // ==================== СТАРТ ====================
-    canvas.width = viewW; canvas.height = viewH;
+    canvas.width = viewW;
+    canvas.height = viewH;
     document.getElementById('desktop').style.display = 'block';
     document.getElementById('menuExitBtn').style.display = 'none';
     console.log('🕹️ Готово! Кликай на this_game.exe');
@@ -962,6 +1269,7 @@
     console.log('🩸 Уровень 9 — кровавая комната с паролем');
     console.log('💀 Уровень 10 — босс, терминалы [E], атака [ПРОБЕЛ]');
     console.log('🔑 Пароль: D3L3T3_M3');
+    console.log('💾 Прогресс автоматически сохраняется перед 8 уровнем');
 </script>
 </body>
 </html>
