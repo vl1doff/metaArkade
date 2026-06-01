@@ -74,7 +74,6 @@
             display: block; background: #1a1a2e;
         }
 
-        /* АТМОСФЕРНЫЕ ГЛЮКИ */
         .glitch-text {
             animation: textGlitch 0.15s infinite;
         }
@@ -315,6 +314,7 @@
     let room9Password = '';
     let level4MessageShown = false;
     let glitchInterval = null;
+    let alreadyCrashedOnLevel8 = false; // Флаг, что краш на 8 уровне уже был
 
     let player = { x: 400, y: 300, size: 14, speed: 4 };
     let keys = {};
@@ -361,7 +361,8 @@
                     currentLevel = data.level;
                     coinsTotal = data.coinsTotal;
                     glitchLevel = data.glitchLevel;
-                    console.log('✅ Загружен уровень', currentLevel);
+                    alreadyCrashedOnLevel8 = true; // Флаг, что краш уже был
+                    console.log('✅ Загружен уровень', currentLevel, '(краш уже был)');
                     return true;
                 } else {
                     localStorage.removeItem('metaArkade_save');
@@ -392,6 +393,7 @@
         keys = {};
         bloodSplatters = [];
         phantomObjects = [];
+        alreadyCrashedOnLevel8 = false; // Сброс флага
         
         // Очищаем таймеры синего экрана
         if (window._bsodTimer) {
@@ -452,6 +454,7 @@
             currentLevel = 1;
             coinsTotal = 0;
             glitchLevel = 0;
+            alreadyCrashedOnLevel8 = false;
             clearSave();
         }
         
@@ -698,8 +701,8 @@
         
         applyGlitchEffects();
 
-        // ========== УРОВЕНЬ 8 - СИНИЙ ЭКРАН (ТОЛЬКО 1 РАЗ) ==========
-        if (lvl === 8) {
+        // ========== УРОВЕНЬ 8 - СИНИЙ ЭКРАН (ТОЛЬКО 1 РАЗ ПРИ ПЕРВОМ ПРОХОЖДЕНИИ) ==========
+        if (lvl === 8 && !alreadyCrashedOnLevel8) {
             saveGame();
             
             // Очищаем старые таймеры
@@ -735,6 +738,9 @@
                     crashGame('lvl8');
                 }
             }, 6000);
+        } else if (lvl === 8 && alreadyCrashedOnLevel8) {
+            console.log('⚠️ Уровень 8 загружен после краша - синий экран НЕ будет показан');
+            showGameMessage('⚠️ Система восстановлена... Продолжай...', 3000);
         }
         
         if (lvl === 10 && bossSfx) {
@@ -1301,7 +1307,7 @@
     console.log('💀 Уровень 10 — босс, терминалы [E], атака [ПРОБЕЛ]');
     console.log('🔑 Пароль: D3L3T3_M3');
     console.log('💾 Прогресс СОХРАНЯЕТСЯ при переходе на 8 уровень!');
-    console.log('⚠️ Синий экран сработает ТОЛЬКО 1 раз на 8 уровне');
+    console.log('⚠️ Синий экран сработает ТОЛЬКО 1 раз - при повторном заходе его НЕ БУДЕТ');
 </script>
 </body>
 </html>
