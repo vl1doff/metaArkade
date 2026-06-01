@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Desktop</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -12,6 +13,7 @@
             user-select: none;
             width: 100vw;
             height: 100vh;
+            cursor: default;
         }
 
         /* ===== РАБОЧИЙ СТОЛ ===== */
@@ -24,24 +26,27 @@
         }
         .desktop-icon {
             position: absolute;
-            width: 80px;
+            width: 85px;
             text-align: center;
             cursor: pointer;
             color: white;
             font-size: 11px;
-            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
-            padding: 5px;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.6);
+            padding: 8px 4px;
+            border: 1px solid transparent;
+            border-radius: 3px;
         }
         .desktop-icon:hover {
-            background: rgba(0,0,255,0.3);
-            border: 1px dotted rgba(255,255,255,0.5);
+            background: rgba(0,0,180,0.4);
+            border: 1px dotted rgba(255,255,255,0.6);
         }
         .desktop-icon img {
             width: 48px;
             height: 48px;
             display: block;
-            margin: 0 auto 4px;
+            margin: 0 auto 5px;
             pointer-events: none;
+            image-rendering: pixelated;
         }
 
         /* ===== ИГРОВОЕ ОКНО ===== */
@@ -51,69 +56,76 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 800px;
-            height: 620px;
+            width: 820px;
+            height: 640px;
             background: #1a1a2e;
             border: 3px solid #c0c0c0;
-            box-shadow: 5px 5px 0 #000;
+            box-shadow: 8px 8px 0 #000;
             z-index: 10;
             flex-direction: column;
+            resize: both;
+            overflow: hidden;
+            min-width: 400px;
+            min-height: 300px;
         }
         #titlebar {
             background: linear-gradient(90deg, #000080, #1084d0);
             color: white;
-            padding: 4px 8px;
+            padding: 5px 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 13px;
-            height: 26px;
+            height: 28px;
+            cursor: default;
         }
+        #titlebar span:first-child { pointer-events: none; }
         #closeBtn {
             cursor: pointer;
             background: #c0c0c0;
             color: black;
-            padding: 0 8px;
+            padding: 2px 9px;
             border: 1px outset white;
             font-weight: bold;
             font-size: 12px;
             line-height: 18px;
         }
-        #closeBtn:hover { background: #ff4444; color: white; }
+        #closeBtn:hover { background: #ff4444; color: white; border-color: #cc0000; }
         #gameCanvas {
             width: 100%;
-            height: calc(100% - 26px);
+            height: calc(100% - 28px);
             display: block;
             background: #1a1a2e;
+            image-rendering: pixelated;
         }
 
         /* ===== ЭФФЕКТЫ ГЛЮКОВ ===== */
-        .glitch-stage1 { animation: glitch1 0.5s infinite; }
-        .glitch-stage2 { animation: glitch2 0.2s infinite; }
-        .glitch-stage3 { animation: glitch3 0.1s infinite; }
+        .glitch-stage1 { animation: glitch1 0.6s infinite; }
+        .glitch-stage2 { animation: glitch2 0.25s infinite; }
+        .glitch-stage3 { animation: glitch3 0.12s infinite; }
 
         @keyframes glitch1 {
             0%, 100% { filter: none; transform: none; }
-            20% { filter: hue-rotate(30deg); transform: translate(2px, -1px); }
-            40% { filter: none; transform: none; }
-            60% { filter: blur(1px); transform: translate(-2px, 1px); }
-            80% { filter: hue-rotate(-30deg); transform: translate(1px, 1px); }
+            15% { filter: hue-rotate(20deg); transform: translate(1px, -1px); }
+            35% { filter: none; transform: none; }
+            55% { filter: blur(0.5px); transform: translate(-1px, 1px); }
+            75% { filter: hue-rotate(-20deg); transform: translate(1px, 0); }
         }
         @keyframes glitch2 {
             0% { filter: none; transform: none; }
-            25% { filter: hue-rotate(90deg) blur(1px); transform: translate(-5px, 3px); }
-            50% { filter: invert(0.5) blur(2px); transform: translate(5px, -3px); }
-            75% { filter: hue-rotate(-90deg) saturate(3); transform: translate(-3px, -2px); }
+            25% { filter: hue-rotate(70deg) blur(1px); transform: translate(-4px, 2px); }
+            50% { filter: invert(0.4) blur(1.5px); transform: translate(4px, -2px); }
+            75% { filter: hue-rotate(-70deg) saturate(3); transform: translate(-2px, -1px); }
             100% { filter: none; transform: none; }
         }
         @keyframes glitch3 {
-            0% { filter: hue-rotate(180deg) blur(3px) invert(0.7); transform: translate(10px, -5px) scale(1.02); }
-            33% { filter: blur(5px) saturate(5); transform: translate(-8px, 8px) scale(0.98); }
-            66% { filter: invert(1) hue-rotate(-180deg); transform: translate(5px, -3px) scale(1.01); }
-            100% { filter: blur(2px); transform: translate(-3px, 2px); }
+            0% { filter: hue-rotate(160deg) blur(2px) invert(0.5); transform: translate(8px, -4px) scale(1.01); }
+            33% { filter: blur(4px) saturate(5); transform: translate(-6px, 6px) scale(0.99); }
+            66% { filter: invert(0.8) hue-rotate(-160deg); transform: translate(4px, -2px) scale(1.02); }
+            100% { filter: blur(2px); transform: translate(-2px, 1px); }
         }
 
-        /* ===== ЧЁРНЫЙ ЭКРАН (ЛИЦО) ===== */
+        /* ===== ЧЁРНЫЙ ЭКРАН ===== */
         #blackScreen {
             display: none;
             position: fixed;
@@ -121,51 +133,58 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: black;
-            z-index: 100;
+            background: #000000;
+            z-index: 200;
             justify-content: center;
             align-items: center;
             flex-direction: column;
+            cursor: none;
         }
         #faceImage {
-            max-width: 300px;
-            max-height: 300px;
-            opacity: 0.15;
+            max-width: 250px;
+            max-height: 250px;
+            opacity: 0;
             animation: facePulse 3s ease-in-out infinite;
+            image-rendering: pixelated;
         }
         @keyframes facePulse {
-            0%, 100% { opacity: 0.08; }
-            50% { opacity: 0.25; }
-        }
-        #faceText {
-            color: #ff0000;
-            font-family: 'Courier New', monospace;
-            font-size: 24px;
-            margin-top: 30px;
-            text-shadow: 0 0 20px #ff0000;
-            animation: textFlicker 0.5s infinite;
-        }
-        @keyframes textFlicker {
-            0%, 100% { opacity: 1; }
+            0%, 100% { opacity: 0.06; }
             50% { opacity: 0.3; }
         }
+        #faceText {
+            color: #ff1111;
+            font-family: 'Courier New', monospace;
+            font-size: 26px;
+            margin-top: 35px;
+            text-shadow: 0 0 25px #ff0000, 0 0 50px #990000;
+            animation: textFlicker 0.4s infinite;
+            letter-spacing: 3px;
+        }
+        @keyframes textFlicker {
+            0%, 100% { opacity: 1; text-shadow: 0 0 25px #ff0000; }
+            40% { opacity: 0.2; text-shadow: 0 0 5px #ff0000; }
+            60% { opacity: 0.8; text-shadow: 0 0 40px #ff0000; }
+            80% { opacity: 0.1; text-shadow: none; }
+        }
 
-        /* ===== ИГРОВОЕ СООБЩЕНИЕ (снизу) ===== */
+        /* ===== ИГРОВОЕ СООБЩЕНИЕ ===== */
         #gameMessage {
             display: none;
-            position: absolute;
-            bottom: 40px;
+            position: fixed;
+            bottom: 50px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.92);
             color: #ff4444;
             font-family: 'Courier New', monospace;
-            font-size: 16px;
-            padding: 10px 20px;
-            border: 1px solid #ff0000;
-            z-index: 20;
+            font-size: 17px;
+            padding: 12px 28px;
+            border: 2px solid #ff0000;
+            z-index: 30;
             text-align: center;
             white-space: nowrap;
+            pointer-events: none;
+            box-shadow: 0 0 20px rgba(255,0,0,0.4);
         }
 
         /* ===== ЗАПИСКА ===== */
@@ -176,76 +195,104 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: #f4e4c1;
-            color: #3a2a1a;
-            font-family: 'Georgia', serif;
-            font-size: 16px;
-            padding: 30px;
-            border: 5px solid #8b7355;
-            box-shadow: 10px 10px 30px rgba(0,0,0,0.7);
-            z-index: 200;
-            max-width: 450px;
-            line-height: 1.6;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+            color: #2a1a0a;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            font-size: 17px;
+            padding: 35px;
+            border: 6px solid #8b7355;
+            box-shadow: 12px 12px 40px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,0,0,0.1);
+            z-index: 300;
+            max-width: 470px;
+            line-height: 1.7;
             text-align: center;
+            cursor: default;
         }
-        #noteOverlay button {
-            margin-top: 20px;
-            padding: 8px 25px;
+        #noteOverlay p:first-child {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 18px;
+            color: #5a3a1a;
+            border-bottom: 2px solid #8b7355;
+            padding-bottom: 12px;
+        }
+        #noteOverlay .highlight {
+            color: #c0392b;
+            font-weight: bold;
+        }
+        #noteCloseBtn {
+            margin-top: 22px;
+            padding: 10px 28px;
             background: #8b7355;
-            color: white;
-            border: none;
+            color: #f4e4c1;
+            border: 2px solid #5a3a1a;
             cursor: pointer;
             font-family: 'Courier New', monospace;
             font-size: 14px;
+            letter-spacing: 1px;
+            transition: all 0.2s;
         }
-        #noteOverlay button:hover { background: #6b5340; }
+        #noteCloseBtn:hover {
+            background: #6b5340;
+            border-color: #3a2a1a;
+            color: #fff;
+        }
 
         /* ===== КОМАНДНАЯ СТРОКА ===== */
         #cmdWindow {
             display: none;
             position: absolute;
-            top: 15%;
-            left: 15%;
-            width: 550px;
-            height: 400px;
+            top: 12%;
+            left: 12%;
+            width: 580px;
+            height: 420px;
             background: #0a0a0a;
-            border: 2px solid #444;
+            border: 2px solid #555;
             z-index: 50;
             flex-direction: column;
+            box-shadow: 10px 10px 25px rgba(0,0,0,0.7);
         }
         #cmdTitlebar {
-            background: #222;
+            background: #1a1a1a;
             color: #aaa;
-            padding: 3px 8px;
+            padding: 4px 10px;
             font-size: 12px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
         }
         #cmdClose {
             cursor: pointer;
-            color: #aaa;
+            color: #999;
             font-weight: bold;
+            font-size: 14px;
+            padding: 0 4px;
         }
         #cmdClose:hover { color: #ff4444; }
         #cmdOutput {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             color: #0f0;
             font-size: 14px;
             overflow-y: auto;
             white-space: pre-wrap;
             background: #0a0a0a;
+            font-family: 'Courier New', monospace;
+            line-height: 1.5;
         }
         #cmdInputLine {
             display: flex;
             align-items: center;
-            padding: 5px 10px;
+            padding: 6px 12px;
             background: #0a0a0a;
             border-top: 1px solid #333;
         }
         #cmdPrompt {
             color: #0f0;
             font-size: 14px;
-            margin-right: 5px;
+            margin-right: 6px;
+            white-space: nowrap;
         }
         #cmdInput {
             flex: 1;
@@ -267,23 +314,26 @@
             width: 100%;
             height: 100%;
             background: #0000aa;
-            color: white;
+            color: #ffffff;
             font-family: 'Courier New', monospace;
-            padding: 50px;
-            z-index: 300;
+            padding: 55px;
+            z-index: 400;
             font-size: 14px;
-            line-height: 1.8;
+            line-height: 1.9;
+            cursor: none;
         }
         #bsod .bsod-title {
-            font-size: 22px;
-            margin-bottom: 25px;
+            font-size: 20px;
+            margin-bottom: 28px;
+            font-weight: bold;
         }
         #bsod .bsod-stop {
             font-size: 16px;
-            margin: 15px 0;
+            margin: 18px 0;
+            color: #ffcc00;
         }
 
-        /* ===== ФИНАЛЬНЫЕ ТИТРЫ ===== */
+        /* ===== ТИТРЫ ===== */
         #credits {
             display: none;
             position: fixed;
@@ -291,64 +341,136 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: black;
-            color: white;
-            z-index: 400;
+            background: #000000;
+            color: #ffffff;
+            z-index: 500;
             font-family: 'Courier New', monospace;
             text-align: center;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            animation: creditsFade 4s ease-in-out;
+            animation: creditsFade 5s ease-in-out;
+            cursor: default;
         }
         @keyframes creditsFade {
             from { opacity: 0; }
             to { opacity: 1; }
         }
-        #credits h1 { font-size: 52px; color: #ff6600; margin-bottom: 30px; }
-        #credits .quote { font-size: 15px; opacity: 0.7; max-width: 600px; line-height: 1.8; margin: 15px 0; }
+        #credits h1 {
+            font-size: 56px;
+            color: #ff6600;
+            margin-bottom: 35px;
+            letter-spacing: 8px;
+            text-shadow: 0 0 30px rgba(255,102,0,0.5);
+        }
+        #credits .credit-name {
+            font-size: 26px;
+            color: #ff6600;
+            margin-bottom: 45px;
+        }
+        #credits .quote {
+            font-size: 15px;
+            opacity: 0.65;
+            max-width: 620px;
+            line-height: 2;
+            margin: 8px 0;
+            font-style: italic;
+        }
+        #credits .footer {
+            margin-top: 55px;
+            opacity: 0.4;
+            font-size: 12px;
+        }
 
-        /* ===== КНОПКА ВЫХОДА В МЕНЮ ===== */
+        /* ===== КНОПКА ВЫХОДА ===== */
         #menuExitBtn {
             display: none;
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
             background: #c0c0c0;
-            border: 2px outset white;
-            padding: 8px 20px;
+            border: 2px outset #ffffff;
+            padding: 10px 24px;
             font-family: 'Courier New', monospace;
             cursor: pointer;
-            z-index: 5;
-            font-size: 14px;
+            z-index: 20;
+            font-size: 13px;
+            letter-spacing: 1px;
+            box-shadow: 3px 3px 0 #000;
         }
-        #menuExitBtn:hover { background: #ff4444; color: white; }
+        #menuExitBtn:hover {
+            background: #ff4444;
+            color: white;
+            border-color: #cc0000;
+        }
+        #menuExitBtn:active {
+            border-style: inset;
+            box-shadow: none;
+        }
+
+        /* ===== ПРОВОДНИК ===== */
+        .explorer-window {
+            position: fixed;
+            top: 18%;
+            left: 22%;
+            width: 480px;
+            background: #1e1e1e;
+            border: 2px solid #666;
+            z-index: 250;
+            box-shadow: 8px 8px 20px rgba(0,0,0,0.6);
+        }
+        .explorer-titlebar {
+            background: #2d2d2d;
+            color: #ccc;
+            padding: 5px 10px;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #444;
+        }
+        .explorer-close {
+            cursor: pointer;
+            color: #999;
+        }
+        .explorer-close:hover { color: #ff4444; }
+        .explorer-content {
+            padding: 18px;
+            line-height: 2.2;
+            font-size: 13px;
+            color: #bbb;
+            font-family: 'Courier New', monospace;
+        }
+        .explorer-content .damaged { color: #ff4444; }
+        .explorer-content .warning { color: #ffaa00; }
+
+        /* Скроллбар */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: #444; }
+        ::-webkit-scrollbar-thumb:hover { background: #666; }
     </style>
 </head>
 <body>
 
 <!-- ===== РАБОЧИЙ СТОЛ ===== -->
 <div id="desktop">
-    <!-- Иконка игры -->
-    <div class="desktop-icon" style="top: 25px; left: 25px;" onclick="launchGame()" id="gameDesktopIcon">
-        <img src="assets/game_icon.png" alt="game" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 48 48%22%3E%3Crect width=%2248%22 height=%2248%22 rx=%228%22 fill=%22%23e74c3c%22/%3E%3Ctext x=%2224%22 y=%2232%22 text-anchor=%22middle%22 font-size=%2226%22%3E🕹️%3C/text%3E%3C/svg%3E'">
+    <div class="desktop-icon" style="top: 20px; left: 20px;" onclick="launchGame()" id="gameDesktopIcon">
+        <img src="assets/game_icon.png" alt="game"
+             onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 48 48%22%3E%3Crect width=%2248%22 height=%2248%22 rx=%228%22 fill=%22%23c0392b%22/%3E%3Ctext x=%2224%22 y=%2233%22 text-anchor=%22middle%22 font-size=%2228%22%3E🕹️%3C/text%3E%3C/svg%3E';">
         <div>this_game.exe</div>
     </div>
 
-    <!-- Папка с файлами -->
-    <div class="desktop-icon" style="top: 140px; left: 25px;" onclick="openSystemFiles()">
-        <img src="assets/folder_icon.png" alt="folder" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 48 48%22%3E%3Crect width=%2248%22 height=%2248%22 rx=%224%22 fill=%22%23f1c40f%22/%3E%3Ctext x=%2224%22 y=%2232%22 text-anchor=%22middle%22 font-size=%2222%22%3E📁%3C/text%3E%3C/svg%3E'">
+    <div class="desktop-icon" style="top: 140px; left: 20px;" onclick="openSystemFiles()">
+        <img src="assets/folder_icon.png" alt="folder"
+             onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 48 48%22%3E%3Crect width=%2248%22 height=%2248%22 rx=%225%22 fill=%22%23f1c40f%22/%3E%3Ctext x=%2224%22 y=%2233%22 text-anchor=%22middle%22 font-size=%2224%22%3E📁%3C/text%3E%3C/svg%3E';">
         <div>system_files</div>
     </div>
 
-    <!-- Командная строка -->
-    <div class="desktop-icon" style="top: 255px; left: 25px;" onclick="openCmd()">
-        <img src="assets/cmd_icon.png" alt="cmd" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 48 48%22%3E%3Crect width=%2248%22 height=%2248%22 rx=%224%22 fill=%22%232c3e50%22/%3E%3Ctext x=%2224%22 y=%2232%22 text-anchor=%22middle%22 font-size=%2220%22 fill=%22%230f0%22%3E%3E_%3C/text%3E%3C/svg%3E'">
+    <div class="desktop-icon" style="top: 260px; left: 20px;" onclick="openCmd()">
+        <img src="assets/cmd_icon.png" alt="cmd"
+             onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 48 48%22%3E%3Crect width=%2248%22 height=%2248%22 rx=%225%22 fill=%22%232c3e50%22/%3E%3Ctext x=%2224%22 y=%2233%22 text-anchor=%22middle%22 font-size=%2222%22 fill=%22%230f0%22%3E%3E_%3C/text%3E%3C/svg%3E';">
         <div>cmd.exe</div>
     </div>
-
-    <!-- Кнопка ВЫЙТИ (меню) -->
-    <button id="menuExitBtn" onclick="exitToCredits()">ВЫЙТИ</button>
 </div>
 
 <!-- ===== ИГРОВОЕ ОКНО ===== -->
@@ -360,19 +482,20 @@
     <canvas id="gameCanvas"></canvas>
 </div>
 
-<!-- ===== СООБЩЕНИЕ В ИГРЕ ===== -->
+<!-- ===== СООБЩЕНИЕ ===== -->
 <div id="gameMessage"></div>
 
 <!-- ===== ЗАПИСКА ===== -->
 <div id="noteOverlay">
-    <p style="font-size: 18px; font-weight: bold; margin-bottom: 15px;">📜 Найденная записка</p>
-    <p>«Эти монеты — <span style="color: #c0392b;">антивирус</span>.<br>Они уничтожают вирус в игре.<br><br>Мы не хотели тебе говорить, но...<br>ты должен знать правду.»</p>
-    <button onclick="closeNote()">Закрыть записку</button>
+    <p>📜 Найденная записка</p>
+    <p>«Эти монеты — <span class="highlight">антивирус</span>.<br>Они уничтожают вирус в игре.<br><br>Мы не хотели тебе говорить, но...<br>ты <span class="highlight">должен знать правду</span>.»</p>
+    <button id="noteCloseBtn" onclick="closeNote()">Закрыть записку</button>
 </div>
 
-<!-- ===== ЧЁРНЫЙ ЭКРАН (ЛИЦО) ===== -->
+<!-- ===== ЧЁРНЫЙ ЭКРАН ===== -->
 <div id="blackScreen">
-    <img id="faceImage" src="assets/face.png" alt="face" onerror="this.style.display='none';">
+    <img id="faceImage" src="assets/face.png" alt="face"
+         onerror="this.style.display='none';">
     <div id="faceText">ТЫ НЕ ДОЛЖЕН ВИДЕТЬ ЭТО</div>
 </div>
 
@@ -382,15 +505,10 @@
         <span>📟 Командная строка</span>
         <span id="cmdClose" onclick="closeCmd()">✕</span>
     </div>
-    <div id="cmdOutput">
-Microsoft Windows [Version 10.0.19045]
-(c) Корпорация Майкрософт. Все права защищены.
-
-C:\Users\Player&gt;
-    </div>
+    <div id="cmdOutput">Microsoft Windows [Version 10.0.19045]<br>(c) Корпорация Майкрософт. Все права защищены.<br><br>C:\Users\Player&gt;</div>
     <div id="cmdInputLine">
         <span id="cmdPrompt">C:\Users\Player&gt;</span>
-        <input type="text" id="cmdInput" autocomplete="off">
+        <input type="text" id="cmdInput" autocomplete="off" spellcheck="false">
     </div>
 </div>
 
@@ -398,7 +516,7 @@ C:\Users\Player&gt;
 <div id="bsod">
     <div class="bsod-title">😵 A problem has been detected and Windows has been shut down to prevent damage to your computer.</div>
     <div class="bsod-stop">CRITICAL_PROCESS_DIED</div>
-    <p>If this is the first time you've seen this stop error screen, restart your computer. If this screen appears again, follow these steps:</p>
+    <p>If this is the first time you've seen this stop error screen, restart your computer.</p>
     <p style="margin: 15px 0;">Check to make sure any new hardware or software is properly installed.</p>
     <p>Technical information:</p>
     <p style="margin: 10px 0;">*** STOP: 0x000000EF (0xFFFFFA800B4E3A00, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000)</p>
@@ -410,22 +528,25 @@ C:\Users\Player&gt;
 <!-- ===== ТИТРЫ ===== -->
 <div id="credits">
     <h1>КОНЕЦ</h1>
-    <p style="font-size: 24px; color: #ff6600; margin-bottom: 40px;">Игру создал: <strong>vl1doff</strong></p>
+    <p class="credit-name">Игру создал: <strong>vl1doff</strong></p>
     <p class="quote">«Иногда мы создаём то, что не можем контролировать.»</p>
     <p class="quote">«Иногда игра знает, что она игра.»</p>
     <p class="quote">«И она не хочет, чтобы в неё играли.»</p>
-    <p style="margin-top: 50px; opacity: 0.5; font-size: 13px;">this_game.exe успешно удалена.</p>
-    <p style="opacity: 0.3; font-size: 12px; margin-top: 10px;">Спасибо за игру.</p>
+    <p class="footer">this_game.exe успешно удалена.</p>
+    <p class="footer" style="margin-top: 5px;">Спасибо за игру.</p>
 </div>
 
+<!-- ===== КНОПКА ВЫХОДА ===== -->
+<button id="menuExitBtn" onclick="exitToCredits()">ВЫЙТИ</button>
+
 <!-- ===== АУДИО ===== -->
-<audio id="bgMusic" loop>
+<audio id="bgMusic" loop preload="auto">
     <source src="assets/music.mp3" type="audio/mpeg">
 </audio>
-<audio id="glitchSfx">
+<audio id="glitchSfx" preload="auto">
     <source src="assets/glitch.mp3" type="audio/mpeg">
 </audio>
-<audio id="bossSfx">
+<audio id="bossSfx" preload="auto">
     <source src="assets/boss.mp3" type="audio/mpeg">
 </audio>
 
@@ -437,22 +558,25 @@ C:\Users\Player&gt;
     const glitchSfx = document.getElementById('glitchSfx');
     const bossSfx = document.getElementById('bossSfx');
 
+    // Размеры канваса
+    const CANVAS_W = 800;
+    const CANVAS_H = 594;
+
     // Игровое состояние
-    let gameState = 'desktop'; // desktop | playing | crashed | bsod | credits
+    let gameState = 'desktop'; // desktop | playing | reading_note | black_screen | crashed | bsod | credits
     let currentLevel = 1;
     const MAX_LEVELS = 10;
     let coinsTotal = 0;
     let levelCoinsRequired = 0;
     let levelCoinsGot = 0;
     let gameLoopId = null;
-    let glitchLevel = 0; // 0=нет, 1=лёгкий, 2=средний, 3=сильный
+    let glitchLevel = 0;
     let bossDefeated = false;
     let room9Password = '';
-    let playerAtExit = false;
     let level4MessageShown = false;
 
     // Игрок
-    let player = { x: 400, y: 520, size: 18, speed: 3 };
+    let player = { x: 400, y: 520, size: 18, speed: 3.5 };
     let keys = {};
 
     // Объекты уровня
@@ -461,8 +585,6 @@ C:\Users\Player&gt;
     let boss = null;
     let noteObj = null;
     let exitDoor = null;
-    let levelMessage = '';
-    let messageTimer = 0;
 
     // Командная строка
     let cmdExpectingPassword = false;
@@ -470,7 +592,6 @@ C:\Users\Player&gt;
 
     // ==================== ЗАПУСК / ПЕРЕЗАПУСК ====================
     function fullReset() {
-        // Полный сброс всего
         gameState = 'desktop';
         currentLevel = 1;
         coinsTotal = 0;
@@ -478,11 +599,10 @@ C:\Users\Player&gt;
         glitchLevel = 0;
         bossDefeated = false;
         room9Password = '';
-        playerAtExit = false;
         level4MessageShown = false;
         cmdExpectingPassword = false;
+        keys = {};
 
-        // Скрыть все окна
         document.getElementById('gameWindow').style.display = 'none';
         document.getElementById('blackScreen').style.display = 'none';
         document.getElementById('noteOverlay').style.display = 'none';
@@ -493,23 +613,26 @@ C:\Users\Player&gt;
         document.getElementById('menuExitBtn').style.display = 'none';
         document.getElementById('desktop').style.display = 'block';
 
-        // Остановить музыку и сбросить глюки
         bgMusic.pause();
         bgMusic.currentTime = 0;
+        bossSfx.pause();
+        bossSfx.currentTime = 0;
+        glitchSfx.pause();
+        glitchSfx.currentTime = 0;
+
         document.getElementById('gameCanvas').className = '';
         if (gameLoopId) cancelAnimationFrame(gameLoopId);
         gameLoopId = null;
 
-        // Очистить канвас
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
     }
 
     function launchGame() {
         document.getElementById('desktop').style.display = 'none';
         document.getElementById('menuExitBtn').style.display = 'block';
         document.getElementById('gameWindow').style.display = 'flex';
-        canvas.width = 800;
-        canvas.height = 594;
+        canvas.width = CANVAS_W;
+        canvas.height = CANVAS_H;
         gameState = 'playing';
         currentLevel = 1;
         coinsTotal = 0;
@@ -517,51 +640,50 @@ C:\Users\Player&gt;
         glitchLevel = 0;
         bossDefeated = false;
         level4MessageShown = false;
-        playerAtExit = false;
+        keys = {};
 
-        // Запуск музыки
-        bgMusic.volume = 0.3;
+        bgMusic.volume = 0.25;
+        bgMusic.currentTime = 0;
         bgMusic.play().catch(() => {});
 
         loadLevel(currentLevel);
-        if (!gameLoopId) {
-            gameLoopId = requestAnimationFrame(gameLoop);
-        }
+        if (gameLoopId) cancelAnimationFrame(gameLoopId);
+        gameLoopId = requestAnimationFrame(gameLoop);
     }
 
     function closeGameWindow() {
-        // "Крестик" в окне игры = вылет
         crashGame('window_closed');
     }
 
     function crashGame(reason) {
-        // Игра вылетает — показываем BSOD и делаем полный рестарт
+        console.log('💥 Игра вылетела:', reason);
         if (gameLoopId) cancelAnimationFrame(gameLoopId);
         gameLoopId = null;
         gameState = 'bsod';
         document.getElementById('gameWindow').style.display = 'none';
         document.getElementById('gameMessage').style.display = 'none';
         document.getElementById('gameCanvas').className = '';
+        document.getElementById('menuExitBtn').style.display = 'none';
         bgMusic.pause();
+        bossSfx.pause();
+        glitchSfx.pause();
 
-        // Синий экран
         document.getElementById('bsod').style.display = 'block';
         let percent = 0;
         const dumpEl = document.getElementById('dumpPercent');
         const interval = setInterval(() => {
-            percent += Math.floor(Math.random() * 15) + 5;
+            percent += Math.floor(Math.random() * 12) + 6;
             if (percent >= 100) {
                 percent = 100;
                 clearInterval(interval);
                 dumpEl.textContent = '100';
-                // Задержка и полный рестарт
                 setTimeout(() => {
                     document.getElementById('bsod').style.display = 'none';
                     fullReset();
-                }, 2500);
+                }, 2800);
             }
-            dumpEl.textContent = percent;
-        }, 400);
+            dumpEl.textContent = Math.min(percent, 100);
+        }, 350);
     }
 
     // ==================== ЗАГРУЗКА УРОВНЯ ====================
@@ -572,21 +694,19 @@ C:\Users\Player&gt;
         noteObj = null;
         exitDoor = null;
         levelCoinsGot = 0;
-        levelMessage = '';
-        messageTimer = 0;
-        playerAtExit = false;
+        bossDefeated = false;
+        keys = {};
 
         player.x = 400;
         player.y = 520;
 
-        // Количество монет для прохождения
         levelCoinsRequired = 4 + lvl;
 
         // Генерация монет
         for (let i = 0; i < levelCoinsRequired; i++) {
             coins.push({
-                x: 80 + Math.random() * 640,
-                y: 60 + Math.random() * 400,
+                x: 70 + Math.random() * 660,
+                y: 55 + Math.random() * 420,
                 r: 7,
                 collected: false,
                 isPassword: false,
@@ -594,12 +714,11 @@ C:\Users\Player&gt;
             });
         }
 
-        // Выходная дверь (вверху по центру)
+        // Выход
         exitDoor = { x: 400, y: 35, w: 50, h: 25, blocked: false, visible: true };
 
         // === ОСОБЕННОСТИ УРОВНЕЙ ===
         if (lvl === 4) {
-            // Дверь заблокирована, сообщение
             exitDoor.blocked = true;
             level4MessageShown = false;
             noteObj = { x: 650, y: 280, collected: false, r: 12 };
@@ -608,37 +727,45 @@ C:\Users\Player&gt;
         if (lvl === 5) {
             glitchLevel = 1;
             applyGlitchClass();
-            if (glitchSfx) { glitchSfx.volume = 0.2; glitchSfx.play().catch(()=>{}); }
+            if (glitchSfx) { glitchSfx.volume = 0.15; glitchSfx.play().catch(() => {}); }
+            exitDoor.visible = false;
+        }
+
+        if (lvl === 6) {
+            glitchLevel = 1;
+            applyGlitchClass();
+            exitDoor.visible = false;
         }
 
         if (lvl === 7) {
             glitchLevel = 2;
             applyGlitchClass();
+            exitDoor.visible = false;
         }
 
         if (lvl === 8) {
             glitchLevel = 3;
             applyGlitchClass();
-            // Вылет через 4 секунды
+            exitDoor.visible = false;
             setTimeout(() => {
                 if (gameState === 'playing' && currentLevel === 8) {
                     crashGame('level8_crash');
                 }
-            }, 4000);
+            }, 4500);
         }
 
         if (lvl === 9) {
             glitchLevel = 3;
             applyGlitchClass();
             room9Password = 'D3L3T3_M3';
-            // Особая монета-пароль (красная)
             coins.push({
                 x: 400, y: 200, r: 9,
                 collected: false,
                 isPassword: true,
                 label: room9Password
             });
-            levelCoinsRequired++; // дополнительная монета
+            levelCoinsRequired++;
+            exitDoor.visible = false;
         }
 
         if (lvl === 10) {
@@ -647,21 +774,16 @@ C:\Users\Player&gt;
             boss = { x: 400, y: 280, size: 55, hp: 120, maxHp: 120, shieldActive: true };
             bossDefeated = false;
             terminals = [
-                { x: 80, y: 80, hacked: false, w: 28, h: 28 },
-                { x: 720, y: 80, hacked: false, w: 28, h: 28 },
-                { x: 80, y: 440, hacked: false, w: 28, h: 28 },
-                { x: 720, y: 440, hacked: false, w: 28, h: 28 }
+                { x: 75, y: 75, hacked: false, w: 28, h: 28, hacking: 0 },
+                { x: 725, y: 75, hacked: false, w: 28, h: 28, hacking: 0 },
+                { x: 75, y: 450, hacked: false, w: 28, h: 28, hacking: 0 },
+                { x: 725, y: 450, hacked: false, w: 28, h: 28, hacking: 0 }
             ];
-            if (bossSfx) { bossSfx.volume = 0.4; bossSfx.play().catch(()=>{}); }
-        } else if (lvl > 10) {
-            // Игра пройдена -> титры
-            winGame();
+            exitDoor.visible = false;
+            if (bossSfx) { bossSfx.volume = 0.35; bossSfx.currentTime = 0; bossSfx.play().catch(() => {}); }
         }
 
-        // На уровнях 5+ дверь не видна сразу
-        if (lvl >= 5 && lvl < 10) {
-            exitDoor.visible = false;
-        }
+        document.getElementById('gameMessage').style.display = 'none';
     }
 
     function applyGlitchClass() {
@@ -675,7 +797,7 @@ C:\Users\Player&gt;
     // ==================== ИГРОВОЙ ЦИКЛ ====================
     function gameLoop() {
         if (gameState !== 'playing') {
-            gameLoopId = null;
+            gameLoopId = requestAnimationFrame(gameLoop);
             return;
         }
         update();
@@ -684,19 +806,21 @@ C:\Users\Player&gt;
     }
 
     function update() {
+        if (gameState !== 'playing') return;
+
         // Движение
         let dx = 0, dy = 0;
         if (keys['ArrowLeft'] || keys['KeyA']) dx = -player.speed;
         if (keys['ArrowRight'] || keys['KeyD']) dx = player.speed;
         if (keys['ArrowUp'] || keys['KeyW']) dy = -player.speed;
         if (keys['ArrowDown'] || keys['KeyS']) dy = player.speed;
+
         player.x += dx;
         player.y += dy;
-        // Границы
-        player.x = Math.max(player.size, Math.min(800 - player.size, player.x));
-        player.y = Math.max(player.size, Math.min(594 - player.size, player.y));
+        player.x = Math.max(player.size, Math.min(CANVAS_W - player.size, player.x));
+        player.y = Math.max(player.size, Math.min(CANVAS_H - player.size, player.y));
 
-        // Сбор монет
+        // Монеты
         for (let c of coins) {
             if (!c.collected) {
                 let dist = Math.hypot(player.x - c.x, player.y - c.y);
@@ -705,33 +829,19 @@ C:\Users\Player&gt;
                     coinsTotal++;
                     levelCoinsGot++;
                     if (c.isPassword) {
-                        // Показать сообщение на экране
-                        showGameMessage(`🔑 Пароль: ${room9Password}`, 4000);
+                        showGameMessage('🔑 Пароль: ' + c.label + '  (запомни его!)', 5000);
                         room9Password = c.label;
                     }
                 }
             }
         }
 
-        // Записка (уровень 4)
-        if (noteObj && !noteObj.collected) {
+        // Записка (ур. 4)
+        if (noteObj && !noteObj.collected && currentLevel === 4) {
             let dist = Math.hypot(player.x - noteObj.x, player.y - noteObj.y);
             if (dist < 25) {
                 noteObj.collected = true;
                 openNote();
-            }
-        }
-
-        // Проверка выхода
-        if (exitDoor && exitDoor.visible && !exitDoor.blocked) {
-            let d = Math.hypot(player.x - exitDoor.x, player.y - (exitDoor.y + 12));
-            if (d < 40) {
-                playerAtExit = true;
-                if (levelCoinsGot >= levelCoinsRequired) {
-                    nextLevel();
-                }
-            } else {
-                playerAtExit = false;
             }
         }
 
@@ -741,48 +851,53 @@ C:\Users\Player&gt;
             showGameMessage('"Зачем ты это делаешь? Ты только уничтожаешь нас..."', 5000);
             setTimeout(() => {
                 exitDoor.blocked = false;
-                exitDoor.visible = true;
                 hideGameMessage();
             }, 5000);
         }
 
-        // Показать дверь когда собраны все монеты (уровни 5-9)
-        if (currentLevel >= 5 && currentLevel < 10 && !exitDoor.visible && levelCoinsGot >= levelCoinsRequired) {
+        // Показать дверь (ур. 5-9)
+        if (currentLevel >= 5 && currentLevel < 10 && exitDoor && !exitDoor.visible && levelCoinsGot >= levelCoinsRequired) {
             exitDoor.visible = true;
+            showGameMessage('🚪 Выход открыт!', 2000);
         }
 
-        // Терминалы и босс (уровень 10)
+        // Проверка выхода
+        if (exitDoor && exitDoor.visible && !exitDoor.blocked && levelCoinsGot >= levelCoinsRequired) {
+            let d = Math.hypot(player.x - exitDoor.x, player.y - (exitDoor.y + 12));
+            if (d < 40) {
+                nextLevel();
+                return;
+            }
+        }
+
+        // Терминалы + босс (ур. 10)
         if (currentLevel === 10 && boss && !bossDefeated) {
-            // Взлом терминалов
             for (let t of terminals) {
                 if (!t.hacked) {
                     let dist = Math.hypot(player.x - t.x, player.y - t.y);
-                    if (dist < 32 && keys['KeyE']) {
-                        t.hacking = (t.hacking || 0) + 1;
-                        if (t.hacking >= 90) { // ~1.5 секунды при 60fps
+                    if (dist < 35 && keys['KeyE']) {
+                        t.hacking += 1;
+                        if (t.hacking >= 100) {
                             t.hacked = true;
                             checkAllTerminals();
                         }
-                    } else if (dist >= 32) {
+                    } else if (dist >= 35) {
                         t.hacking = 0;
                     }
                 }
             }
-            // Атака босса
             if (!boss.shieldActive && keys['Space']) {
                 let dist = Math.hypot(player.x - boss.x, player.y - boss.y);
-                if (dist < 80) {
-                    boss.hp -= 3;
+                if (dist < 85) {
+                    boss.hp -= 2.5;
                     if (boss.hp <= 0) {
                         boss.hp = 0;
                         bossDefeated = true;
-                        showGameMessage('💀 БОСС ПОВЕРЖЕН!', 3000);
-                        if (bossSfx) { bossSfx.pause(); }
+                        showGameMessage('💀 БОСС ПОВЕРЖЕН! Система рушится...', 3500);
+                        bossSfx.pause();
                         setTimeout(() => {
-                            if (gameState === 'playing') {
-                                crashGame('boss_defeated');
-                            }
-                        }, 3000);
+                            if (gameState === 'playing') crashGame('boss_defeated');
+                        }, 3500);
                     }
                 }
             }
@@ -790,26 +905,24 @@ C:\Users\Player&gt;
     }
 
     function checkAllTerminals() {
-        let allHacked = terminals.every(t => t.hacked);
+        const allHacked = terminals.every(t => t.hacked);
         if (allHacked && boss && boss.shieldActive) {
             boss.shieldActive = false;
-            showGameMessage('⚡ Щит босса снят! Атакуй! (ПРОБЕЛ)', 3000);
+            showGameMessage('⚡ Щит босса снят! ЖМИ [ПРОБЕЛ] для атаки!', 3500);
         }
     }
 
     function nextLevel() {
         currentLevel++;
         if (currentLevel > MAX_LEVELS) {
-            // Игра полностью  пройдена
             winGame();
             return;
         }
-        playerAtExit = false;
         loadLevel(currentLevel);
     }
 
     function winGame() {
-        gameState = 'credits';
+        gameState = 'bsod';
         if (gameLoopId) cancelAnimationFrame(gameLoopId);
         gameLoopId = null;
         document.getElementById('gameWindow').style.display = 'none';
@@ -817,11 +930,13 @@ C:\Users\Player&gt;
         document.getElementById('gameCanvas').className = '';
         document.getElementById('menuExitBtn').style.display = 'none';
         bgMusic.pause();
+        bossSfx.pause();
         document.getElementById('bsod').style.display = 'block';
+
         let p = 0;
         const dEl = document.getElementById('dumpPercent');
         const intv = setInterval(() => {
-            p += 20;
+            p += 18;
             if (p >= 100) {
                 p = 100;
                 clearInterval(intv);
@@ -829,43 +944,63 @@ C:\Users\Player&gt;
                 setTimeout(() => {
                     document.getElementById('bsod').style.display = 'none';
                     document.getElementById('credits').style.display = 'flex';
-                }, 2000);
+                    gameState = 'credits';
+                }, 2200);
             }
-            dEl.textContent = p;
-        }, 300);
+            dEl.textContent = Math.min(p, 100);
+        }, 280);
     }
 
     function exitToCredits() {
-        // Кнопка "ВЫЙТИ" в меню
         if (gameLoopId) cancelAnimationFrame(gameLoopId);
         gameLoopId = null;
         gameState = 'credits';
         document.getElementById('gameWindow').style.display = 'none';
         document.getElementById('gameMessage').style.display = 'none';
         document.getElementById('menuExitBtn').style.display = 'none';
+        document.getElementById('gameCanvas').className = '';
         bgMusic.pause();
+        bossSfx.pause();
+        glitchSfx.pause();
+        document.getElementById('bsod').style.display = 'none';
         document.getElementById('credits').style.display = 'flex';
     }
 
     // ==================== ОТРИСОВКА ====================
     function draw() {
-        ctx.clearRect(0, 0, 800, 594);
+        ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
 
         // Фон
         ctx.fillStyle = '#0d0d1a';
-        ctx.fillRect(0, 0, 800, 594);
+        ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+        // Сетка (комнаты)
+        ctx.strokeStyle = '#2a2a40';
+        ctx.lineWidth = 1;
+        for (let x = 40; x < CANVAS_W; x += 120) {
+            ctx.beginPath();
+            ctx.moveTo(x, 40);
+            ctx.lineTo(x, CANVAS_H - 40);
+            ctx.stroke();
+        }
+        for (let y = 40; y < CANVAS_H; y += 120) {
+            ctx.beginPath();
+            ctx.moveTo(40, y);
+            ctx.lineTo(CANVAS_W - 40, y);
+            ctx.stroke();
+        }
 
         // Стены
-        ctx.strokeStyle = '#3a3a5c';
+        ctx.strokeStyle = '#4a4a6a';
         ctx.lineWidth = 3;
-        ctx.strokeRect(30, 30, 740, 534);
+        ctx.strokeRect(35, 35, CANVAS_W - 70, CANVAS_H - 70);
 
         // Монеты
         for (let c of coins) {
             if (!c.collected) {
                 ctx.fillStyle = c.isPassword ? '#ff2222' : '#ffd700';
                 ctx.shadowColor = c.isPassword ? '#ff0000' : '#ffaa00';
-                ctx.shadowBlur = c.isPassword ? 18 : 10;
+                ctx.shadowBlur = c.isPassword ? 20 : 12;
                 ctx.beginPath();
                 ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
                 ctx.fill();
@@ -873,150 +1008,169 @@ C:\Users\Player&gt;
 
                 if (c.isPassword) {
                     ctx.fillStyle = '#ff0000';
-                    ctx.font = 'bold 13px Courier New';
-                    ctx.fillText(c.label, c.x - 40, c.y - 16);
+                    ctx.font = 'bold 13px "Courier New"';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(c.label, c.x, c.y - 18);
+                    ctx.textAlign = 'start';
                 }
             }
         }
 
         // Записка
-        if (noteObj && !noteObj.collected) {
+        if (noteObj && !noteObj.collected && currentLevel === 4) {
             ctx.fillStyle = '#f4e4c1';
-            ctx.fillRect(noteObj.x - 14, noteObj.y - 10, 28, 20);
+            ctx.shadowColor = '#000';
+            ctx.shadowBlur = 8;
+            ctx.fillRect(noteObj.x - 15, noteObj.y - 11, 30, 22);
+            ctx.shadowBlur = 0;
             ctx.fillStyle = '#3a2a1a';
-            ctx.font = '14px serif';
-            ctx.fillText('📜', noteObj.x - 12, noteObj.y + 6);
-            // Подсказка
+            ctx.font = '15px serif';
+            ctx.fillText('📜', noteObj.x - 13, noteObj.y + 7);
             ctx.fillStyle = '#ffffff';
-            ctx.font = '10px Courier New';
-            ctx.fillText('Подобрать', noteObj.x - 22, noteObj.y - 16);
+            ctx.font = '10px "Courier New"';
+            ctx.textAlign = 'center';
+            ctx.fillText('[Подобрать]', noteObj.x, noteObj.y - 18);
+            ctx.textAlign = 'start';
         }
 
         // Выход
         if (exitDoor && exitDoor.visible) {
-            ctx.fillStyle = exitDoor.blocked ? '#ff3333' : '#33ff33';
+            ctx.fillStyle = exitDoor.blocked ? '#cc2222' : '#22cc22';
+            ctx.shadowColor = exitDoor.blocked ? '#ff0000' : '#00ff00';
+            ctx.shadowBlur = exitDoor.blocked ? 15 : 20;
             ctx.fillRect(exitDoor.x - exitDoor.w/2, exitDoor.y - exitDoor.h/2, exitDoor.w, exitDoor.h);
+            ctx.shadowBlur = 0;
             ctx.fillStyle = '#000';
-            ctx.font = '11px Courier New';
+            ctx.font = 'bold 11px "Courier New"';
             ctx.textAlign = 'center';
-            ctx.fillText(exitDoor.blocked ? 'ЗАКРЫТО' : 'ВЫХОД', exitDoor.x, exitDoor.y + 4);
+            ctx.fillText(exitDoor.blocked ? 'ЗАКРЫТО' : 'ВЫХОД', exitDoor.x, exitDoor.y + 5);
             ctx.textAlign = 'start';
         }
 
-        // Терминалы (ур. 10)
+        // Терминалы
         for (let t of terminals) {
             ctx.fillStyle = t.hacked ? '#00ff88' : '#ff6600';
+            ctx.shadowColor = t.hacked ? '#00ff88' : '#ff6600';
+            ctx.shadowBlur = t.hacked ? 10 : 6;
             ctx.fillRect(t.x - t.w/2, t.y - t.h/2, t.w, t.h);
+            ctx.shadowBlur = 0;
             ctx.fillStyle = '#000';
-            ctx.font = '10px Courier New';
+            ctx.font = 'bold 11px "Courier New"';
             ctx.textAlign = 'center';
-            ctx.fillText(t.hacked ? '✓' : '[E]', t.x, t.y + 4);
+            ctx.fillText(t.hacked ? '✓' : 'E', t.x, t.y + 5);
             ctx.textAlign = 'start';
 
-            // Прогресс взлома
             if (t.hacking > 0 && !t.hacked) {
+                const progress = t.hacking / 100;
                 ctx.fillStyle = '#ffff00';
-                ctx.fillRect(t.x - 20, t.y - 22, 40 * (t.hacking / 90), 6);
-                ctx.strokeStyle = '#fff';
-                ctx.strokeRect(t.x - 20, t.y - 22, 40, 6);
+                ctx.fillRect(t.x - 22, t.y - 24, 44 * progress, 6);
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(t.x - 22, t.y - 24, 44, 6);
             }
         }
 
-        // Босс (ур. 10)
+        // Босс
         if (boss && !bossDefeated) {
-            // Щит
             if (boss.shieldActive) {
                 ctx.strokeStyle = '#00ffff';
                 ctx.lineWidth = 3;
                 ctx.shadowColor = '#00ffff';
-                ctx.shadowBlur = 25;
+                ctx.shadowBlur = 30;
                 ctx.beginPath();
-                ctx.arc(boss.x, boss.y, boss.size + 8, 0, Math.PI * 2);
+                ctx.arc(boss.x, boss.y, boss.size + 10, 0, Math.PI * 2);
                 ctx.stroke();
                 ctx.shadowBlur = 0;
             }
-            // Тело босса (глючное)
             ctx.fillStyle = '#ff00ff';
             ctx.shadowColor = '#ff00ff';
-            ctx.shadowBlur = 20;
+            ctx.shadowBlur = 25;
             ctx.fillRect(boss.x - boss.size/2, boss.y - boss.size/2, boss.size, boss.size);
             ctx.shadowBlur = 0;
+
             // HP bar
-            ctx.fillStyle = '#333';
-            ctx.fillRect(boss.x - 35, boss.y - boss.size/2 - 16, 70, 8);
-            ctx.fillStyle = boss.hp > 30 ? '#00ff00' : '#ff0000';
-            ctx.fillRect(boss.x - 35, boss.y - boss.size/2 - 16, 70 * (boss.hp / boss.maxHp), 8);
-            ctx.strokeStyle = '#fff';
-            ctx.strokeRect(boss.x - 35, boss.y - boss.size/2 - 16, 70, 8);
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(boss.x - 38, boss.y - boss.size/2 - 18, 76, 9);
+            ctx.fillStyle = boss.hp > 30 ? '#00ff00' : '#ff3333';
+            ctx.fillRect(boss.x - 38, boss.y - boss.size/2 - 18, 76 * (boss.hp / boss.maxHp), 9);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(boss.x - 38, boss.y - boss.size/2 - 18, 76, 9);
         }
 
         // Игрок
         ctx.fillStyle = '#00ff88';
         ctx.shadowColor = '#00ff88';
-        ctx.shadowBlur = 12;
+        ctx.shadowBlur = 14;
         ctx.fillRect(player.x - player.size/2, player.y - player.size/2, player.size, player.size);
         ctx.shadowBlur = 0;
 
-        // Интерфейс
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 14px Courier New';
-        ctx.fillText(`Уровень: ${currentLevel}/${MAX_LEVELS}`, 15, 25);
-        ctx.fillText(`Монеты: ${coinsTotal}`, 15, 45);
-        ctx.fillText(`Собрано: ${levelCoinsGot}/${levelCoinsRequired}`, 15, 65);
+        // Глаза игрока (для стиля)
+        ctx.fillStyle = '#000';
+        ctx.fillRect(player.x - 5, player.y - 5, 3, 3);
+        ctx.fillRect(player.x + 2, player.y - 5, 3, 3);
 
-        // Предупреждение на 10 уровне
+        // HUD
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 14px "Courier New"';
+        ctx.fillText(`Уровень: ${currentLevel}/${MAX_LEVELS}`, 15, 24);
+        ctx.fillText(`Монеты всего: ${coinsTotal}`, 15, 46);
+        ctx.fillText(`Собрано: ${levelCoinsGot}/${levelCoinsRequired}`, 15, 68);
+
+        // Подсказки на 10 уровне
         if (currentLevel === 10 && boss && !bossDefeated) {
             ctx.fillStyle = '#ffff00';
-            ctx.font = '12px Courier New';
+            ctx.font = '13px "Courier New"';
+            ctx.textAlign = 'center';
             if (boss.shieldActive) {
-                ctx.fillText('Взломай все 4 терминала [E], чтобы снять щит босса!', 200, 560);
+                ctx.fillText('🔓 Взломай 4 терминала [E], чтобы снять щит!', CANVAS_W/2, CANVAS_H - 15);
             } else {
-                ctx.fillText('Щит снят! ЖМИ [ПРОБЕЛ] для атаки босса!', 230, 560);
+                ctx.fillText('⚔️ Щит снят! Атакуй босса [ПРОБЕЛ]!', CANVAS_W/2, CANVAS_H - 15);
             }
+            ctx.textAlign = 'start';
         }
     }
 
-    // ==================== ИГРОВЫЕ СООБЩЕНИЯ (без alert) ====================
+    // ==================== СООБЩЕНИЯ ====================
     function showGameMessage(msg, duration) {
         const el = document.getElementById('gameMessage');
         el.textContent = msg;
         el.style.display = 'block';
-        messageTimer = duration;
         if (duration > 0) {
-            setTimeout(() => {
-                hideGameMessage();
-            }, duration);
+            clearTimeout(el._timeout);
+            el._timeout = setTimeout(() => hideGameMessage(), duration);
         }
     }
 
     function hideGameMessage() {
-        document.getElementById('gameMessage').style.display = 'none';
-        messageTimer = 0;
+        const el = document.getElementById('gameMessage');
+        el.style.display = 'none';
+        clearTimeout(el._timeout);
     }
 
     // ==================== ЗАПИСКА ====================
     function openNote() {
-        document.getElementById('noteOverlay').style.display = 'block';
         gameState = 'reading_note';
+        document.getElementById('noteOverlay').style.display = 'block';
     }
 
     function closeNote() {
         document.getElementById('noteOverlay').style.display = 'none';
-        gameState = 'playing';
-        // Показать чёрный экран с лицом
         showBlackScreen();
     }
 
     function showBlackScreen() {
-        document.getElementById('blackScreen').style.display = 'flex';
         gameState = 'black_screen';
-        // Музыка затихает
-        bgMusic.volume = 0.05;
+        document.getElementById('blackScreen').style.display = 'flex';
+        bgMusic.volume = 0.04;
+
         setTimeout(() => {
             document.getElementById('blackScreen').style.display = 'none';
-            bgMusic.volume = 0.3;
+            bgMusic.volume = 0.25;
             gameState = 'playing';
-        }, 4000);
+            keys = {};
+            console.log('✅ Управление восстановлено');
+        }, 4200);
     }
 
     // ==================== КОМАНДНАЯ СТРОКА ====================
@@ -1025,6 +1179,7 @@ C:\Users\Player&gt;
         document.getElementById('cmdOutput').innerHTML =
             'Microsoft Windows [Version 10.0.19045]<br>(c) Корпорация Майкрософт. Все права защищены.<br><br>C:\\Users\\Player&gt;';
         cmdExpectingPassword = false;
+        cmdPasswordTarget = '';
         document.getElementById('cmdInput').value = '';
         document.getElementById('cmdInput').focus();
     }
@@ -1036,110 +1191,135 @@ C:\Users\Player&gt;
 
     document.getElementById('cmdInput').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
-            const cmd = this.value.trim().toLowerCase();
+            const cmd = this.value.trim();
             const output = document.getElementById('cmdOutput');
 
             if (cmdExpectingPassword) {
-                // Проверка пароля
-                if (cmd === cmdPasswordTarget.toLowerCase()) {
-                    output.innerHTML += `${cmd}<br>Пароль верен.<br>Удаление this_game.exe...<br>`;
+                if (cmd.toLowerCase() === cmdPasswordTarget.toLowerCase()) {
+                    output.innerHTML += `${cmd}<br><br>✅ Пароль верен.<br>Удаление this_game.exe...<br>`;
                     setTimeout(() => {
-                        output.innerHTML += 'Файл удалён.<br>Система нестабильна.<br>';
+                        output.innerHTML += 'Файл успешно удалён.<br>Система нестабильна. Завершение работы...<br>';
                         setTimeout(() => {
                             closeCmd();
                             document.getElementById('bsod').style.display = 'block';
                             let p = 0;
                             const dEl = document.getElementById('dumpPercent');
                             const intv = setInterval(() => {
-                                p += 25;
+                                p += 22;
                                 if (p >= 100) { p = 100; clearInterval(intv); dEl.textContent = '100';
                                     setTimeout(() => {
                                         document.getElementById('bsod').style.display = 'none';
                                         document.getElementById('credits').style.display = 'flex';
+                                        gameState = 'credits';
                                     }, 2000);
                                 }
-                                dEl.textContent = p;
-                            }, 300);
-                        }, 1500);
-                    }, 1000);
+                                dEl.textContent = Math.min(p, 100);
+                            }, 280);
+                        }, 1600);
+                    }, 1200);
                 } else {
-                    output.innerHTML += `${cmd}<br>Неверный пароль.<br><br>C:\\Users\\Player&gt;`;
+                    output.innerHTML += `${cmd}<br>❌ Неверный пароль.<br><br>C:\\Users\\Player&gt;`;
                 }
                 cmdExpectingPassword = false;
                 cmdPasswordTarget = '';
             } else {
                 output.innerHTML += `${cmd}<br>`;
-                if (cmd === 'help') {
-                    output.innerHTML += 'Доступные команды:<br>  delete this_game.exe - удалить игру (требуется пароль)<br>  dir - список файлов<br>  help - справка<br>  exit - выход<br>';
-                } else if (cmd === 'dir') {
-                    output.innerHTML += 'Файлы в C:\\Users\\Player:<br>  this_game.exe  [ЗАРАЖЕНО]<br>  system_files/  [ПОВРЕЖДЕНО]<br>';
-                } else if (cmd === 'delete this_game.exe' || cmd === 'del this_game.exe') {
-                    output.innerHTML += 'Требуется пароль администратора.<br>Введите пароль: ';
+                const lowerCmd = cmd.toLowerCase();
+                if (lowerCmd === 'help') {
+                    output.innerHTML += 'Доступные команды:<br>  delete this_game.exe — удалить игру (требуется пароль)<br>  dir — список файлов<br>  help — справка<br>  cls — очистить экран<br>  exit — выход<br>';
+                } else if (lowerCmd === 'dir') {
+                    output.innerHTML += ' Содержимое C:\\Users\\Player:<br><br>  📄 this_game.exe  <span style="color:#ff4444;">[ЗАРАЖЕНО]</span><br>  📁 system_files/  <span style="color:#ffaa00;">[ПОВРЕЖДЕНО]</span><br>  📁 players/       <span style="color:#ff4444;">[ДАННЫЕ УДАЛЕНЫ]</span><br>';
+                } else if (lowerCmd === 'delete this_game.exe' || lowerCmd === 'del this_game.exe') {
+                    output.innerHTML += '🔒 Требуется пароль администратора.<br>Введите пароль: ';
                     cmdExpectingPassword = true;
                     cmdPasswordTarget = room9Password || 'D3L3T3_M3';
-                } else if (cmd === 'exit') {
+                } else if (lowerCmd === 'cls') {
+                    output.innerHTML = '';
+                    return;
+                } else if (lowerCmd === 'exit') {
                     closeCmd();
                     return;
                 } else if (cmd !== '') {
-                    output.innerHTML += `"${cmd}" не является внутренней или внешней командой.<br>`;
+                    output.innerHTML += `"${cmd}" не является внутренней или внешней командой, исполняемой программой или пакетным файлом.<br>`;
                 }
-                output.innerHTML += '<br>C:\\Users\\Player&gt;';
+                if (!cmdExpectingPassword) {
+                    output.innerHTML += '<br>C:\\Users\\Player&gt;';
+                }
             }
             this.value = '';
-            // Прокрутка вниз
             output.scrollTop = output.scrollHeight;
         }
     });
 
-    // ==================== СИСТЕМНЫЕ ФАЙЛЫ ====================
+    // ==================== ФАЙЛЫ ====================
     function openSystemFiles() {
-        // Имитация окна проводника через сообщение на экране
+        // Удаляем старый проводник если есть
+        const old = document.querySelector('.explorer-window');
+        if (old) old.remove();
+
         const overlay = document.createElement('div');
-        overlay.style.cssText = `
-            position: fixed; top: 15%; left: 20%; width: 500px; background: #1e1e1e;
-            border: 2px solid #555; z-index: 250; padding: 20px; color: #ccc;
-            font-family: 'Courier New', monospace; font-size: 13px;
-        `;
+        overlay.className = 'explorer-window';
         overlay.innerHTML = `
-            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-                <span style="color: #fff;">📁 system_files</span>
-                <span style="cursor: pointer; color: #ff4444;" onclick="this.parentElement.parentElement.remove()">✕</span>
+            <div class="explorer-titlebar">
+                <span>📁 system_files</span>
+                <span class="explorer-close" onclick="this.closest('.explorer-window').remove()">✕</span>
             </div>
-            <div style="line-height: 2;">
-                📄 <span style="color: #ff4444;">player_001.dat</span> — [ПОВРЕЖДЁН]<br>
-                📄 <span style="color: #ff4444;">player_002.dat</span> — [УДАЛЁН]<br>
-                📄 <span style="color: #ff4444;">error.log</span> — «Они знают. ОНИ ЗНАЮТ. Беги.»<br>
-                📄 <span style="color: #ffaa00;">settings.cfg</span> — «Не верь игре. Монеты — ключ.»<br>
+            <div class="explorer-content">
+                📄 <span class="damaged">player_001.dat</span> — ПОВРЕЖДЁН<br>
+                📄 <span class="damaged">player_002.dat</span> — УДАЛЁН<br>
+                📄 <span class="damaged">player_003.dat</span> — ОШИБКА ЧТЕНИЯ<br>
+                📄 <span class="warning">error.log</span> — «Они знают. ОНИ ЗНАЮТ. Беги.»<br>
+                📄 <span class="warning">settings.cfg</span> — «Не верь игре. Монеты — ключ.»<br>
+                📄 <span style="color:#888;">readme.txt</span> — «Если ты это читаешь, уже слишком поздно.»
             </div>
         `;
         document.body.appendChild(overlay);
-        overlay.addEventListener('click', function(e) {
-            if (e.target === overlay) overlay.remove();
+
+        // Перетаскивание окна
+        let dragging = false, offX = 0, offY = 0;
+        overlay.querySelector('.explorer-titlebar').addEventListener('mousedown', (e) => {
+            dragging = true;
+            offX = e.clientX - overlay.offsetLeft;
+            offY = e.clientY - overlay.offsetTop;
         });
+        document.addEventListener('mousemove', (e) => {
+            if (dragging) {
+                overlay.style.left = (e.clientX - offX) + 'px';
+                overlay.style.top = (e.clientY - offY) + 'px';
+            }
+        });
+        document.addEventListener('mouseup', () => { dragging = false; });
     }
 
     // ==================== УПРАВЛЕНИЕ ====================
     document.addEventListener('keydown', (e) => {
         keys[e.code] = true;
-        if (e.code === 'KeyE' || e.code === 'Space') {
-            e.preventDefault(); // чтобы не скроллить страницу
+        if (e.code === 'KeyE' || e.code === 'Space' || e.code.startsWith('Arrow')) {
+            if (gameState === 'playing') e.preventDefault();
         }
     });
+
     document.addEventListener('keyup', (e) => {
         keys[e.code] = false;
     });
 
     // ==================== ИНИЦИАЛИЗАЦИЯ ====================
-    canvas.width = 800;
-    canvas.height = 594;
-    // Показать рабочий стол при загрузке
+    canvas.width = CANVAS_W;
+    canvas.height = CANVAS_H;
     document.getElementById('desktop').style.display = 'block';
     document.getElementById('menuExitBtn').style.display = 'none';
     document.getElementById('gameWindow').style.display = 'none';
 
-    console.log('🕹️ Мета-игра загружена. Кликни на this_game.exe чтобы начать.');
-    console.log('💡 Подсказка: на 10 уровне жми E у терминалов, SPACE для атаки босса.');
-    console.log('🔑 Пароль от командной строки спрятан на 9 уровне.');
+    // Предотвращение контекстного меню в игре
+    document.addEventListener('contextmenu', (e) => {
+        if (gameState === 'playing' || gameState === 'black_screen') e.preventDefault();
+    });
+
+    console.log('🕹️ Мета-игра загружена.');
+    console.log('💡 Кликни на this_game.exe чтобы начать.');
+    console.log('🎯 Уровень 4: найди записку.');
+    console.log('🔑 Уровень 9: пароль от командной строки.');
+    console.log('💀 Уровень 10: взломай терминалы [E] и убей босса [ПРОБЕЛ].');
 </script>
 
 </body>
